@@ -1,0 +1,82 @@
+---
+// Page de remerciement post-paiement — hors contrat SEO (noindex, hors sitemap)
+import Base from '../../layouts/Base.astro';
+
+const TITLE = "Merci — Prim.net";
+const DESC = "Confirmation de votre demande de publication";
+---
+<Base title={TITLE} description={DESC} noindex={true}>
+  <main class="container">
+    <section class="merci" aria-labelledby="merci-title">
+      <h1 id="merci-title">Merci pour votre confiance&nbsp;! 🎉</h1>
+      <p class="merci-sub">Votre paiement est en cours de confirmation…</p>
+
+      <div id="merci-recap" class="merci-recap" hidden>
+        <h2>Récapitulatif de votre commande</h2>
+        <dl>
+          <div><dt>Pack</dt><dd id="m-pack">—</dd></div>
+          <div><dt>Montant réglé</dt><dd id="m-total">—</dd></div>
+          <div><dt>E-mail de contact</dt><dd id="m-email">—</dd></div>
+        </dl>
+      </div>
+
+      <p class="merci-status" id="merci-status" role="status" aria-live="polite"></p>
+      <p class="merci-back"><a href="/">← Retour à l'accueil</a></p>
+    </section>
+  </main>
+</Base>
+
+<style>
+  .merci { max-width: var(--maxw); margin: 48px auto 80px; text-align: center; }
+  .merci h1 { font-size: 32px; margin: 0 0 12px; }
+  .merci-sub { font-size: 16px; color: #4a4a4a; margin: 0 0 28px; }
+  .merci-recap {
+    display: inline-block; text-align: left; background: #f7f7f7;
+    border: 1.5px solid #858585; border-radius: 8px; padding: 20px 28px; margin: 0 auto 24px;
+  }
+  .merci-recap h2 { font-size: 18px; margin: 0 0 14px; }
+  .merci-recap dl { margin: 0; }
+  .merci-recap dl div { display: flex; justify-content: space-between; gap: 24px; padding: 6px 0; border-bottom: 1px solid #c8c8c8; }
+  .merci-recap dl div:last-child { border-bottom: 0; }
+  .merci-recap dt { font-weight: 700; color: #111; }
+  .merci-recap dd { margin: 0; color: #4a4a4a; }
+  .merci-status { font-size: 15px; color: #0a6b1d; font-weight: 600; min-height: 22px; }
+  .merci-back a { color: var(--accent); font-weight: 600; }
+</style>
+
+<script>
+  // Confirme la session Stripe et affiche le récapitulatif (un seul appel par session)
+  const KEY = 'prim_merci_v1';
+  const status = document.getElementById('merci-status');
+  const recap = document.getElementById('merci-recap');
+  const sid = new URLSearchParams(location.search).get('session_id');
+
+  const setPending = () => {
+    status.textContent = 'Confirmation en cours — vous recevrez les détails de votre commande sur votre e-mail.';
+  };
+
+  if (sid) {
+    try {
+      if (localStorage.getItem(KEY) === sid) { setPending(); }
+      else {
+        fetch('/api/confirm?session_id=' + encodeURIComponent(sid))
+          .then((r) => r.json())
+          .then((d) => {
+            if (d.ok) {
+              localStorage.setItem(KEY, sid);
+              document.getElementById('m-pack').textContent = d.pack || '—';
+              document.getElementById('m-total').textContent = d.total || '—';
+              document.getElementById('m-email').textContent = d.email || '—';
+              recap.hidden = false;
+              status.textContent = 'Votre demande a bien été enregistrée. Notre équipe vous recontacte rapidement.';
+            } else {
+              setPending();
+            }
+          })
+          .catch(setPending);
+      }
+    } catch (e) { setPending(); }
+  } else {
+    status.textContent = 'Merci ! Vous recevrez un e-mail de notre équipe.';
+  }
+</script>

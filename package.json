@@ -1,0 +1,19 @@
+{
+  "name": "drmk-static",
+  "type": "module",
+  "version": "0.1.0",
+  "description": "Site statique Astro généré depuis le dump SQL WordPress de drmk.ch — migration blog .ch",
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview",
+    "fetch:wp": "node scripts/fetch-wp.mjs",
+    "prebuild": "node scripts/unpack-data.mjs"
+  },
+  "dependencies": {
+    "astro": "^5.0.0"
+  },
+  "devDependencies": {
+    "wrangler": "^4.123.0"
+  }
+}

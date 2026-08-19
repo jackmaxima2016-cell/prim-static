@@ -1,0 +1,702 @@
+---
+// Formulaire multistep de qualification des prospects — publications sponsorisées
+// Étape 1 : pack (169 → 1 499 EUR) · Étape 2 : durée + options · Étape 3 : infos · Étape 4 : projet
+// Total en direct, persistance localStorage (entrées partielles conservées),
+// anti-bot Turnstile vérifié par la Pages Function /api/contact → FormSubmit.
+import { getCategories, decodeEntities } from '../lib/wp.mjs';
+
+// Site key Turnstile (publique — sans danger dans le code)
+const TURNSTILE_SITE_KEY = 'PRIM_TURNSTILE_SITE_KEY';
+
+const rubriques = getCategories()
+  .filter((c) => c.count > 0)
+  .sort((a, b) => b.count - a.count)
+  .slice(0, 9);
+
+const packs = [
+  {
+    id: 'essentiel', name: 'Essentiel', price: 91, old: 169, tagline: 'Pour une première visibilité',
+    feats: ['Article de 400–600 mots', '1 lien dofollow vers votre site (SEO)', 'Publication sous 7 jours', '1 rubrique au choix', 'Durée de publication incluse'],
+  },
+  {
+    id: 'standard', name: 'Standard', price: 215, old: 399, tagline: 'Le meilleur rapport visibilité/prix', popular: true,
+    feats: ['Article de 700–900 mots', '2 liens + 1 lien interne (SEO renforcé)', 'Publication sous 5 jours', 'Mise en avant dans le fil d’actualité', 'Badge « Contenu sponsorisé »', 'Durée de publication incluse'],
+  },
+  {
+    id: 'premium', name: 'Premium', price: 431, old: 799, tagline: 'Une présence éditoriale affirmée',
+    feats: ['Article de 1 000–1 400 mots', '3 liens + 2 liens internes', 'Publication sous 48 h', 'Mise en avant sur la page d’accueil', 'Relecture éditoriale prioritaire', 'Durée de publication incluse'],
+  },
+  {
+    id: 'impact', name: 'Impact', price: 809, old: 1499, tagline: 'Dossier complet ou campagne multi-articles',
+    feats: ['Dossier de 2 000+ mots ou 3 articles', 'Liens renforcés (5 + 3 internes)', 'Publication sous 24 h', 'Accompagnement éditorial dédié', 'Mention dans la newsletter', 'Durée de publication incluse'],
+  },
+];
+
+const durees = [
+  { id: 'd1', value: '1 an', price: 0, note: 'Testez l’impact' },
+  { id: 'd5', value: '5 ans', price: 20, note: 'Visibilité confirmée' },
+  { id: 'd10', value: '10 ans', price: 50, note: 'Ancrage durable' },
+  { id: 'dvie', value: 'À vie', price: 40, note: 'Recommandé — patrimoine de liens', recommended: true },
+];
+
+const options = [
+  { id: 'opt-redaction', name: 'opt_redaction', label: 'Rédaction par nos soins', note: 'vous fournissez le sujet, nous écrivons', price: 71, old: 149 },
+  { id: 'opt-lien', name: 'opt_lien', label: 'Lien supplémentaire', note: 'un backlink de plus vers votre site', price: 23, old: 49 },
+  { id: 'opt-express', name: 'opt_express', label: 'Publication express 24 h', note: 'priorité absolue au planning', price: 47, old: 99 },
+  { id: 'opt-reseaux', name: 'opt_reseaux', label: 'Post LinkedIn + Facebook', note: 'annonce de votre article', price: 23, old: 49 },
+  { id: 'opt-newsletter', name: 'opt_newsletter', label: 'Mise en avant newsletter', note: 'à nos abonnés', price: 38, old: 79 },
+  { id: 'opt-article', name: 'opt_article', label: 'Article additionnel', note: 'un article de plus dans le même pack', price: 95, old: 199 },
+];
+
+const stepTitles = ['Choisissez votre pack', 'Durée & options', 'Vos informations', 'Votre projet'];
+---
+
+<section class="contact-form-wrap">
+  <div class="promo-banner" id="promo-banner">
+    <span class="promo-flag">🔥 Offre de lancement — 46&nbsp;% de réduction</span>
+    <span class="promo-timer">⏳ La promotion se termine dans <strong id="promo-countdown">15:00</strong></span>
+  </div>
+    <form id="prospect-form" class="prospect-form" action="/api/checkout" method="POST" novalidate>
+      <input type="hidden" name="_subject" value="Nouvelle demande de publication — prim.net" />
+      <input type="hidden" name="_template" value="table" />
+      <!-- Honeypot anti-spam (laissé vide par les humains) -->
+      <input type="text" name="_honey" class="hp-field" tabindex="-1" autocomplete="off" aria-hidden="true" />
+
+      <!-- Progression -->
+      <div class="progress-wrap" role="group" aria-label="Progression du formulaire">
+        <ol class="progress-steps" id="progress-steps">
+          {stepTitles.map((t, i) => (
+            <li class:list={['progress-step', { 'is-active': i === 0 }]} data-step={i + 1}>
+              <span class="p-num">{i + 1}</span>
+              <span class="p-label">{t}</span>
+            </li>
+          ))}
+        </ol>
+        <div class="progress-track" aria-hidden="true">
+          <span class="progress-fill" id="progress-fill"></span>
+        </div>
+      </div>
+
+      <!-- Étape 1 : pack -->
+      <section class="step-panel" data-panel="1" aria-labelledby="step1-title">
+        <h3 class="form-section" id="step1-title">1. Choisissez votre pack</h3>
+        <div class="packs-grid" id="packs-grid">
+          {packs.map((p) => (
+            <label class:list={['pack-card', { 'is-popular': p.popular }]}>
+              <input type="radio" name="pack" value={p.name} data-price={p.price} data-old={p.old} required />
+              {p.popular && <span class="pack-popular">Le plus choisi</span>}
+              <span class="pack-head">
+                <span class="pack-name">{p.name}</span>
+                <span class="pack-price">{p.price}&nbsp;EUR</span>
+                <span class="pack-old">{p.old}&nbsp;EUR</span>
+              </span>
+              <span class="pack-tagline">{p.tagline}</span>
+              <span class="pack-feats">
+                {p.feats.map((f) => <span class="pack-feat">✓ {f}</span>)}
+              </span>
+            </label>
+          ))}
+        </div>
+        <p class="panel-error" id="pack-error" hidden>Veuillez choisir un pack pour continuer.</p>
+      </section>
+
+      <!-- Étape 2 : durée + options -->
+      <section class="step-panel" data-panel="2" aria-labelledby="step2-title" hidden>
+        <h3 class="form-section" id="step2-title">2. Durée de publication</h3>
+        <p class="form-hint">Incluse dans le prix de votre pack — votre article reste en ligne et indexé pendant la durée choisie.</p>
+        <div class="duree-grid">
+          {durees.map((d) => (
+            <label class:list={['duree-card', { 'is-rec': d.recommended }]}>
+              <input type="radio" name="duree" value={d.value} data-price={d.price} checked={d.recommended} />
+              <span class="duree-value">{d.value}</span>
+              <span class="duree-price">{d.price ? `+${d.price} EUR` : 'Inclus'}</span>
+              <span class="duree-note">{d.note}</span>
+              {d.recommended && <span class="duree-rec">Recommandé</span>}
+            </label>
+          ))}
+        </div>
+
+        <h3 class="form-section">3. Options à la carte</h3>
+        <div class="opts-list">
+          {options.map((o) => (
+            <label class="opt-item" for={o.id}>
+              <span class="opt-main">
+                <input type="checkbox" id={o.id} name={o.name} data-price={o.price} data-old={o.old} />
+                <span class="opt-check" aria-hidden="true"></span>
+                <span>
+                  <span class="opt-label">{o.label}</span>
+                  <span class="opt-note">{o.note}</span>
+                </span>
+              </span>
+              <span class="opt-price"><s class="opt-old">{o.old} EUR</s> +{o.price} EUR</span>
+            </label>
+          ))}
+        </div>
+      </section>
+
+      <!-- Étape 3 : informations -->
+      <section class="step-panel" data-panel="3" aria-labelledby="step3-title" hidden>
+        <h3 class="form-section" id="step3-title">4. Vos informations</h3>
+        <div class="form-row">
+          <div class="form-field">
+            <label for="f-nom">Nom complet *</label>
+            <input type="text" id="f-nom" name="nom" required autocomplete="name" placeholder="Prénom et nom" />
+          </div>
+          <div class="form-field">
+            <label for="f-email">E-mail *</label>
+            <input type="email" id="f-email" name="email" required autocomplete="email" placeholder="vous@entreprise.ch" />
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-field">
+            <label for="f-entreprise">Entreprise / marque *</label>
+            <input type="text" id="f-entreprise" name="entreprise" required placeholder="Nom de votre entreprise" />
+          </div>
+          <div class="form-field">
+            <label for="f-telephone">Téléphone</label>
+            <input type="tel" id="f-telephone" name="telephone" autocomplete="tel" placeholder="Optionnel" />
+          </div>
+        </div>
+      </section>
+
+      <!-- Étape 4 : projet -->
+      <section class="step-panel" data-panel="4" aria-labelledby="step4-title" hidden>
+        <h3 class="form-section" id="step4-title">5. Votre projet</h3>
+        <div class="form-field">
+          <label for="f-rubrique">Rubrique souhaitée *</label>
+          <select id="f-rubrique" name="rubrique" required>
+            <option value="" disabled selected>Choisir…</option>
+            {rubriques.map((c) => <option>{decodeEntities(c.name)}</option>)}
+            <option>Autre</option>
+          </select>
+        </div>
+        <div class="form-field">
+          <label for="f-site">URL de votre site internet à mettre en avant *</label>
+          <input type="url" id="f-site" name="site" required inputmode="url" placeholder="https://votre-site.ch" />
+        </div>
+        <div class="form-field">
+          <label for="f-sujet">Sujet de la publication *</label>
+          <textarea id="f-sujet" name="sujet" required rows="3" placeholder="Thème, angle éditorial, informations clés à mettre en avant…"></textarea>
+        </div>
+        <div class="cond-fields" id="cond-fields">
+          <div class="form-field cond-field" data-cond="opt-redaction" data-required="false" hidden>
+            <label for="f-opt-redaction">Mots-clés / angle pour la rédaction</label>
+            <input type="text" id="f-opt-redaction" name="opt_redaction_angle" placeholder="Ex. : cybersécurité, PME suisses, données…" />
+          </div>
+          <div class="form-field cond-field" data-cond="opt-lien" data-required="true" hidden>
+            <label for="f-opt-lien">URL du lien supplémentaire *</label>
+            <input type="url" id="f-opt-lien" name="opt_lien_url" placeholder="https://votre-site.ch/page-a-lier" />
+          </div>
+          <div class="form-field cond-field" data-cond="opt-reseaux" data-required="false" hidden>
+            <label for="f-opt-reseaux">Comptes à mentionner (LinkedIn / Facebook)</label>
+            <input type="text" id="f-opt-reseaux" name="opt_reseaux_comptes" placeholder="Ex. : @votre-entreprise, page Facebook…" />
+          </div>
+          <div class="form-field cond-field" data-cond="opt-article" data-required="true" hidden>
+            <label for="f-opt-article">Sujet de l'article additionnel *</label>
+            <input type="text" id="f-opt-article" name="opt_article_sujet" placeholder="Le thème du 2e article" />
+          </div>
+        </div>
+        <div class="form-field">
+          <label for="f-message">Message complémentaire</label>
+          <textarea id="f-message" name="message" rows="3" placeholder="Références, objectifs, contraintes… (optionnel)"></textarea>
+        </div>
+        <div class="cf-turnstile" id="turnstile-slot"></div>
+        <p class="form-status" role="status" aria-live="polite"></p>
+      </section>
+
+      <!-- Pied : total + navigation -->
+      <div class="form-footer">
+        <div class="total-row">
+          <span>Total estimé</span>
+          <span class="total-amounts">
+            <s id="total-old" hidden></s>
+            <strong id="total-estime">—</strong>
+          </span>
+        </div>
+        <div class="form-nav">
+          <button type="button" class="btn-prev" id="btn-prev" hidden>← Précédent</button>
+          <button type="submit" class="btn-next" id="btn-next">Continuer →</button>
+        </div>
+      </div>
+    </form>
+
+    <div class="promo-banner promo-banner-2" id="promo-banner-2">
+      <span class="promo-flag">🔥 Offre de lancement — 46&nbsp;% de réduction</span>
+      <span class="promo-timer">⏳ La promotion se termine dans <strong id="promo-countdown-2">15:00</strong></span>
+    </div>
+
+    <ul class="trust-badges" aria-label="Réassurance">
+      <li><strong>🔒 Paiement sécurisé</strong><span>Stripe — carte bancaire</span></li>
+      <li><strong>⚡ Confirmation immédiate</strong><span>reçu après paiement</span></li>
+      <li><strong>🤝 Confirmation sous 24–48 h</strong><span>validation du calendrier</span></li>
+      <li><strong>🛡️ Annulation gratuite</strong><span>avant publication</span></li>
+    </ul>
+
+    <div class="form-success" hidden>
+      <h3>Demande envoyée ✅</h3>
+      <p>Merci ! Votre demande est bien reçue. Nous revenons vers vous sous 24–48&nbsp;h avec une proposition.</p>
+      <p class="form-success-back"><a href="/">← Retour à l’accueil</a></p>
+    </div>
+</section>
+
+<style>
+  .contact-form-wrap { max-width: var(--maxw); margin: 0 auto; }
+
+  .contact-kicker { text-transform: uppercase; font-size: 12px; font-weight: 700; letter-spacing: 0.12em; color: var(--accent); margin: 0 0 8px; }
+  .contact-title { font-size: 26px; margin: 0 0 14px; }
+  .contact-intro p { font-size: 15px; line-height: 1.65; color: #222; }
+  .roi-title { font-size: 15px; font-weight: 800; margin: 22px 0 10px; text-transform: uppercase; letter-spacing: 0.05em; }
+  .roi-list { list-style: none; margin: 0; padding: 0; }
+  .roi-list li { font-size: 13.5px; line-height: 1.6; padding: 10px 0; border-top: 1px solid #c8c8c8; color: #262626; }
+  .roi-list li strong { display: block; margin-bottom: 2px; }
+  .contact-steps { list-style: none; margin: 18px 0 0; padding: 0; }
+  .contact-steps li { font-size: 14px; line-height: 1.55; padding: 10px 0; border-top: 1px solid #c8c8c8; color: #262626; }
+  .contact-note { font-size: 13px; color: #5c5c5c; margin-top: 16px; }
+
+  /* ---- Progression ---- */
+  .progress-wrap { margin-bottom: 22px; }
+  .progress-steps { list-style: none; display: flex; gap: 4px; margin: 0 0 10px; padding: 0; min-width: 0; }
+  .progress-step { display: flex; align-items: center; gap: 7px; flex: 1 1 0; min-width: 0; font-size: 12.5px; font-weight: 600; color: #555; cursor: pointer; transition: opacity 0.15s ease; }
+  .progress-step:hover { opacity: 0.8; }
+  .progress-step.is-active { color: #111; font-weight: 800; }
+  .p-num {
+    display: inline-flex; align-items: center; justify-content: center; flex: 0 0 auto;
+    width: 24px; height: 24px; border-radius: 50%; background: #dcdcdc; color: #333;
+    font-size: 12px; font-weight: 800;
+  }
+  .progress-step.is-active .p-num { background: var(--accent); color: #fff; }
+  .progress-step.is-done .p-num { background: #111; color: #fff; }
+  .p-label { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  /* Mobile : seuls les numéros + la barre restent (pas de débordement) */
+  @media (max-width: 639px) {
+    .p-label { display: none; }
+    .progress-step { justify-content: center; }
+  }
+  .progress-track { height: 6px; border-radius: 99px; background: #dcdcdc; overflow: hidden; }
+  .progress-fill { display: block; height: 100%; width: 25%; border-radius: 99px; background: var(--accent); transition: width 0.3s ease; }
+
+  .form-section { font-size: 15px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; margin: 0 0 12px; color: #111; }
+  .step-panel { padding: 20px; border: 1px solid #c8c8c8; border-radius: 10px; background: #fff; }
+  .step-panel + .step-panel { margin-top: 0; }
+  .form-hint { font-size: 13px; color: #5c5c5c; margin: -6px 0 12px; }
+
+  /* Grille de packs */
+  .packs-grid { display: grid; grid-template-columns: 1fr; gap: 12px; }
+  @media (min-width: 640px) { .packs-grid { grid-template-columns: 1fr 1fr; } }
+  .pack-card {
+    position: relative; display: block; cursor: pointer; padding: 16px;
+    border: 2px solid #858585; border-radius: 8px; background: #fff;
+    transition: border-color 0.15s, box-shadow 0.15s;
+  }
+  .pack-card:hover { border-color: #4a4a4a; }
+  .pack-card:has(input:checked) { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(160, 16, 48, 0.18); }
+  .pack-card:has(input:focus-visible) { outline: 3px solid #0a5fd0; outline-offset: 2px; }
+  .pack-card input { position: absolute; opacity: 0; pointer-events: none; left: 0; top: 0; width: 1px; height: 1px; }
+  .pack-popular {
+    position: absolute; top: -10px; right: 10px; background: var(--accent); color: #fff;
+    font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em;
+    padding: 3px 9px; border-radius: 99px;
+  }
+  .pack-head { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+  .pack-name { font-size: 18px; font-weight: 800; color: #111; }
+  .pack-price { font-size: 20px; font-weight: 900; color: var(--accent); white-space: nowrap; }
+  .pack-tagline { display: block; font-size: 12.5px; color: #5c5c5c; margin: 2px 0 10px; }
+  .pack-feats { display: block; }
+  .pack-feat { display: block; font-size: 13px; line-height: 1.5; color: #262626; }
+  .panel-error { font-size: 13.5px; font-weight: 600; color: #b00020; margin: 12px 0 0; }
+
+  /* Durée de publication */
+  .duree-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 6px; }
+  @media (min-width: 640px) { .duree-grid { grid-template-columns: repeat(4, 1fr); } }
+  .duree-card {
+    position: relative; display: block; cursor: pointer; text-align: center;
+    padding: 12px 8px 10px; border: 2px solid #858585; border-radius: 8px; background: #fff;
+    transition: border-color 0.15s, box-shadow 0.15s;
+  }
+  .duree-card:hover { border-color: #4a4a4a; }
+  .duree-card:has(input:checked) { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(160, 16, 48, 0.18); }
+  .duree-card:has(input:focus-visible) { outline: 3px solid #0a5fd0; outline-offset: 2px; }
+  .duree-card input { position: absolute; opacity: 0; pointer-events: none; left: 0; top: 0; width: 1px; height: 1px; }
+  .duree-value { display: block; font-size: 15px; font-weight: 800; color: #111; }
+  .duree-price { display: block; font-size: 13px; font-weight: 800; color: var(--accent); margin-top: 2px; }
+  .duree-note { display: block; font-size: 11.5px; color: #5c5c5c; margin-top: 2px; }
+  .duree-rec {
+    display: inline-block; margin-top: 6px; font-size: 9.5px; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 0.05em; color: var(--accent);
+    border: 1.5px solid var(--accent); border-radius: 99px; padding: 2px 7px;
+  }
+  .duree-card.is-rec { border-color: #b87a7a; }
+
+  /* Options à la carte */
+  .opts-list { display: grid; grid-template-columns: 1fr; gap: 10px; }
+  .opt-item {
+    display: flex; justify-content: space-between; align-items: center; gap: 12px;
+    padding: 11px 13px; border: 1.5px solid #858585; border-radius: 6px; cursor: pointer;
+    background: #fff; transition: background 0.15s, border-color 0.15s;
+  }
+  .opt-item:hover { background: #f5f5f5; border-color: #4a4a4a; }
+  .opt-item:has(input:checked) { border-color: var(--accent); background: rgba(160, 16, 48, 0.06); }
+  .opt-item:has(input:focus-visible) { outline: 3px solid #0a5fd0; outline-offset: 2px; }
+  .opt-main { display: flex; align-items: center; gap: 10px; min-width: 0; flex: 1 1 auto; }
+  .opt-main > span { min-width: 0; }
+  .opt-item input { position: absolute; opacity: 0; pointer-events: none; left: 0; top: 0; width: 1px; height: 1px; }
+  .opt-item .opt-check { width: 20px; height: 20px; border: 2px solid #5c5c5c; border-radius: 4px; flex: 0 0 auto; display: inline-block; background: #fff; }
+  .opt-item:has(input:checked) .opt-check { background: var(--accent); border-color: var(--accent); }
+  .opt-item:has(input:checked) .opt-check::after { content: '✓'; color: #fff; font-size: 14px; line-height: 16px; text-align: center; display: block; font-weight: 700; }
+  .opt-label { display: block; font-size: 14px; font-weight: 600; color: #111; overflow-wrap: break-word; }
+  .opt-note { display: block; font-size: 12px; color: #5c5c5c; }
+  .opt-price { font-size: 14px; font-weight: 800; color: var(--accent); white-space: nowrap; }
+
+  /* Champs */
+  .form-row { display: grid; grid-template-columns: 1fr; gap: 0; }
+  @media (min-width: 640px) { .form-row { grid-template-columns: 1fr 1fr; gap: 16px; } }
+  .form-field { margin-bottom: 16px; }
+  .form-field label { display: block; font-size: 13px; font-weight: 700; margin-bottom: 6px; color: #111; }
+  .prospect-form input:not([type="checkbox"]):not([type="radio"]), .prospect-form select, .prospect-form textarea {
+    width: 100%; padding: 12px 13px; font: inherit; font-size: 15px;
+    border: 1.5px solid #767676; border-radius: 4px; background: #fff; color: #111;
+    transition: border-color 0.15s, box-shadow 0.15s;
+  }
+  .prospect-form input::placeholder, .prospect-form textarea::placeholder { color: #5c5c5c; }
+  .prospect-form input:focus, .prospect-form select:focus, .prospect-form textarea:focus {
+    outline: none; border-color: #0a5fd0; box-shadow: 0 0 0 3px rgba(10, 95, 208, 0.25);
+  }
+  .prospect-form textarea { resize: vertical; }
+  .prospect-form select { appearance: auto; }
+  .hp-field { position: absolute; left: -9999px; opacity: 0; height: 0; width: 0; }
+
+  .cf-turnstile { margin: 14px 0 4px; }
+
+  /* Pied : total + navigation */
+  .form-footer { display: flex; justify-content: space-between; align-items: center; gap: 14px; flex-wrap: wrap; margin-top: 18px; }
+  .total-row {
+    display: flex; justify-content: space-between; align-items: baseline; gap: 16px;
+    padding: 12px 16px; background: #111; color: #fff; border-radius: 8px; font-size: 15px; flex: 1 1 auto;
+  }
+  .total-row span { font-weight: 600; }
+  .total-row strong { font-size: 24px; font-weight: 900; color: #fff; }
+  .form-nav { display: flex; gap: 10px; }
+  .btn-prev {
+    padding: 12px 18px; font: inherit; font-size: 15px; font-weight: 700;
+    color: #111; background: #fff; border: 2px solid #111; border-radius: 4px; cursor: pointer;
+    transition: background 0.15s, color 0.15s;
+  }
+  .btn-prev:hover { background: #eee; }
+  .btn-prev:focus-visible, .btn-next:focus-visible { outline: 3px solid #0a5fd0; outline-offset: 2px; }
+  .btn-next {
+    padding: 12px 26px; font: inherit; font-size: 15px; font-weight: 700;
+    color: #fff; background: #111; border: none; border-radius: 4px; cursor: pointer;
+    transition: background 0.15s;
+  }
+  .btn-next:hover { background: var(--accent); }
+  .btn-next[disabled] { opacity: 0.6; cursor: wait; }
+
+  .form-status { font-size: 14px; margin: 12px 0 0; min-height: 20px; font-weight: 600; }
+  .form-status.is-error { color: #b00020; }
+  .form-status.is-ok { color: #0a6b1d; }
+  .form-success h3 { font-size: 22px; margin: 0 0 10px; }
+  .form-success p { font-size: 15px; line-height: 1.6; }
+  .form-success-back { margin-top: 16px; }
+
+  /* ---- Bandeau promotion + compte à rebours ---- */
+  .promo-banner {
+    display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 16px;
+    background: linear-gradient(90deg, #8e0000, #b30000);
+    color: #fff; border-radius: 8px; padding: 12px 18px; margin: 0 0 18px;
+    font-size: 15px; line-height: 1.4;
+  }
+  .promo-banner-2 { margin: 18px 0 14px; }
+  .promo-flag { font-weight: 800; letter-spacing: 0.2px; }
+  .promo-timer { font-weight: 600; }
+  .promo-timer strong {
+    display: inline-block; background: #fff; color: #b30000; border-radius: 6px;
+    padding: 2px 10px; margin-left: 6px; font-variant-numeric: tabular-nums;
+    font-size: 17px; letter-spacing: 1px;
+  }
+
+  /* ---- Prix barrés ---- */
+  .pack-old { display: block; color: #6b6b6b; text-decoration: line-through; font-size: 14px; font-weight: 500; margin-top: 2px; }
+  .opt-old { color: #6b6b6b; text-decoration: line-through; font-size: 13px; font-weight: 500; margin-right: 6px; }
+
+  /* ---- Total avec prix barré ---- */
+  .total-amounts { display: inline-flex; align-items: baseline; gap: 12px; }
+  .total-amounts s { color: #b5b5b5; font-size: 16px; font-weight: 600; }
+
+  /* ---- Réassurance ---- */
+  .trust-badges {
+    list-style: none; margin: 16px 0 0; padding: 14px 16px;
+    display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px 16px;
+    background: #f7f7f7; border: 1px solid #d5d5d5; border-radius: 8px;
+  }
+  .trust-badges li { display: flex; flex-direction: column; font-size: 13px; color: #333; }
+  .trust-badges li strong { font-size: 13.5px; color: #111; }
+  .trust-badges li span { color: #6b6b6b; }
+</style>
+
+<script>
+  const STORAGE_KEY = 'prim_prospect_v1';
+  const form = document.getElementById('prospect-form');
+  const panels = [...form.querySelectorAll('.step-panel')];
+  const steps = [...document.querySelectorAll('.progress-step')];
+  const fill = document.getElementById('progress-fill');
+  const totalEl = document.getElementById('total-estime');
+  const btnPrev = document.getElementById('btn-prev');
+  const btnNext = document.getElementById('btn-next');
+  const status = form.querySelector('.form-status');
+  const success = document.querySelector('.form-success');
+  const packError = document.getElementById('pack-error');
+  const turnstileSlot = document.getElementById('turnstile-slot');
+  const pricers = form.querySelectorAll('input[data-price]');
+  const persistables = [...form.querySelectorAll('input, select, textarea')].filter(
+    (el) => el.name && el.name !== '_honey' && el.name !== 'cf-turnstile-response'
+  );
+
+  let currentStep = 1;
+  let turnstileRendered = false;
+
+  /* ---------- Total ---------- */
+  const totalOldEl = document.getElementById('total-old');
+  const updateTotal = () => {
+    let total = 0;
+    let totalOld = 0;
+    pricers.forEach((el) => {
+      if (el.checked) {
+        total += Number(el.dataset.price);
+        totalOld += Number(el.dataset.old || 0);
+      }
+    });
+    const packChecked = form.querySelector('input[name="pack"]:checked');
+    totalEl.textContent = packChecked && total ? `${total} EUR` : '—';
+    if (totalOldEl) {
+      totalOldEl.textContent = packChecked && totalOld ? `${totalOld} EUR` : '';
+      totalOldEl.hidden = !(packChecked && totalOld);
+    }
+  };
+  pricers.forEach((el) => el.addEventListener('change', () => { updateTotal(); saveState(); }));
+
+  /* ---------- Champs conditionnels selon les options choisies ---------- */
+  const condFields = [...form.querySelectorAll('.cond-field')];
+  const syncCondFields = () => {
+    condFields.forEach((f) => {
+      const opt = document.getElementById(f.dataset.cond);
+      const show = !!opt && opt.checked;
+      f.hidden = !show;
+      const input = f.querySelector('input, textarea');
+      if (input) input.required = show && f.dataset.required === 'true';
+    });
+  };
+  pricers.forEach((el) => el.addEventListener('change', syncCondFields));
+
+  /* ---------- Persistance localStorage ---------- */
+  const saveState = () => {
+    try {
+      const data = { __step: currentStep };
+      persistables.forEach((el) => {
+        if (el.type === 'radio') { if (el.checked) data[el.name] = el.value; }
+        else if (el.type === 'checkbox') data[el.name] = el.checked;
+        else data[el.name] = el.value;
+      });
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    } catch (e) { /* stockage indisponible : on continue sans persistance */ }
+  };
+  const restoreState = () => {
+    let data = null;
+    try { data = JSON.parse(localStorage.getItem(STORAGE_KEY)); } catch (e) { return; }
+    if (!data) return;
+    persistables.forEach((el) => {
+      if (el.type === 'radio') { if (data[el.name] !== undefined) el.checked = data[el.name] === el.value; }
+      else if (el.type === 'checkbox') { if (data[el.name] !== undefined) el.checked = !!data[el.name]; }
+      else if (data[el.name] !== undefined) el.value = data[el.name];
+    });
+    currentStep = Math.min(4, Math.max(1, parseInt(data.__step, 10) || 1));
+  };
+  persistables.forEach((el) => {
+    el.addEventListener('input', saveState);
+    el.addEventListener('change', saveState);
+  });
+
+  /* ---------- Navigation ---------- */
+  const goToStep = (n) => {
+    currentStep = n;
+    panels.forEach((p, i) => { p.hidden = i !== n - 1; });
+    steps.forEach((s, i) => {
+      s.classList.toggle('is-active', i === n - 1);
+      s.classList.toggle('is-done', i < n - 1);
+    });
+    fill.style.width = `${(n / 4) * 100}%`;
+    btnPrev.hidden = n === 1;
+    btnNext.textContent = n === 4 ? 'Commander ma publication' : 'Continuer →';
+    if (n === 4) ensureTurnstile();
+    syncCondFields();
+    saveState();
+  };
+
+  const validatePanel = (n) => {
+    if (n === 1) {
+      const ok = form.querySelector('input[name="pack"]:checked');
+      packError.hidden = !!ok;
+      return !!ok;
+    }
+    const panel = panels[n - 1];
+    const invalids = [...panel.querySelectorAll('input, select, textarea')].filter((el) => !el.checkValidity());
+    if (invalids.length) { invalids[0].reportValidity(); return false; }
+    return true;
+  };
+
+  btnPrev.addEventListener('click', () => { if (currentStep > 1) goToStep(currentStep - 1); });
+
+  /* ---------- Numéros d'étapes cliquables ---------- */
+  steps.forEach((s, i) => {
+    s.setAttribute('role', 'button');
+    s.setAttribute('tabindex', '0');
+    s.addEventListener('click', () => {
+      const target = i + 1;
+      if (target === currentStep) return;
+      if (target < currentStep) { goToStep(target); return; }
+      if (validatePanel(currentStep)) goToStep(target); // étape suivante : valider le panneau courant d'abord
+    });
+    s.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); s.click(); }
+    });
+  });
+
+  form.addEventListener('submit', async (e) => {
+    if (currentStep < 4) {
+      e.preventDefault();
+      if (validatePanel(currentStep)) goToStep(currentStep + 1);
+      return;
+    }
+    // Dernière étape : envoi réel
+    e.preventDefault();
+    if (!validatePanel(4)) return;
+    const token = form.querySelector('[name="cf-turnstile-response"]');
+    if (!token || !token.value) {
+      showStatus('Veuillez compléter la vérification anti-robot.', true);
+      return;
+    }
+    showStatus('', false);
+    btnNext.disabled = true;
+    btnNext.textContent = 'Envoi en cours…';
+    try {
+      // Données complètes du formulaire (avec les cases à cocher)
+      const payload = {};
+      persistables.forEach((el) => {
+        const condWrap = el.closest('.cond-field');
+        if (condWrap) {
+          const opt = form.querySelector(`#${condWrap.dataset.cond}`);
+          if (!opt || !opt.checked) return; // champ lié à une option non choisie
+        }
+        if (el.type === 'radio') { if (el.checked) payload[el.name] = el.value; }
+        else if (el.type === 'checkbox') payload[el.name] = el.checked;
+        else payload[el.name] = el.value;
+      });
+      payload['cf-turnstile-response'] = token.value;
+      const res = await fetch('/api/checkout', {
+        method: 'POST',
+        headers: { Accept: 'application/json', 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      const data = await res.json().catch(() => ({}));
+      // Paiement Stripe : redirection vers Checkout
+      if (data.url) {
+        window.location.href = data.url;
+        return;
+      }
+      if (res.ok && data.success === 'true') {
+        localStorage.removeItem(STORAGE_KEY);
+        form.hidden = true;
+        success.hidden = false;
+      } else {
+        throw new Error(data.message || 'Réponse invalide');
+      }
+    } catch (err) {
+      const msg = err.message || '';
+      if (/anti-robot|vérification/i.test(msg) && window.turnstile) window.turnstile.reset();
+      showStatus(`${msg} — Vous recevrez les détails sur votre e-mail.`, true);
+      btnNext.disabled = false;
+      btnNext.textContent = 'Commander ma publication';
+    }
+  });
+
+  const showStatus = (msg, isError) => {
+    status.textContent = msg;
+    status.classList.toggle('is-error', isError);
+    status.classList.toggle('is-ok', !isError && !!msg);
+  };
+
+  /* ---------- Turnstile (chargé à l'étape 4) ---------- */
+  let turnstileLoading = null;
+  const ensureTurnstile = () => {
+    if (turnstileRendered) return;
+    if (turnstileLoading) return turnstileLoading;
+    turnstileLoading = new Promise((resolve) => {
+      const load = () => {
+        if (window.turnstile) {
+          window.turnstile.render(turnstileSlot, {
+            sitekey: 'PRIM_TURNSTILE_SITE_KEY',
+            theme: 'light',
+            language: 'fr',
+          });
+          turnstileRendered = true;
+          resolve();
+          return;
+        }
+        const s = document.createElement('script');
+        s.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit';
+        s.async = true;
+        s.onload = () => {
+          window.turnstile.render(turnstileSlot, {
+            sitekey: 'PRIM_TURNSTILE_SITE_KEY',
+            theme: 'light',
+            language: 'fr',
+          });
+          turnstileRendered = true;
+          resolve();
+        };
+        s.onerror = () => resolve();
+        document.head.appendChild(s);
+      };
+      setTimeout(load, 50);
+    });
+    return turnstileLoading;
+  };
+
+  /* ---------- Compte à rebours promo (individuel par visiteur) ---------- */
+  const PROMO_KEY = 'prim_promo_v1';
+  const PROMO_MS = 15 * 60 * 1000;
+  const countdownEls = [...document.querySelectorAll('#promo-countdown, #promo-countdown-2')];
+  const startPromoCountdown = () => {
+    let remain = PROMO_MS;
+    try {
+      const stored = parseInt(localStorage.getItem(PROMO_KEY), 10) || 0;
+      const now = Date.now();
+      if (!stored || now - stored >= PROMO_MS) {
+        localStorage.setItem(PROMO_KEY, String(now));
+        remain = PROMO_MS;
+      } else {
+        remain = PROMO_MS - (now - stored);
+      }
+    } catch (e) { remain = PROMO_MS; }
+    const fmt = (ms) => {
+      const m = Math.floor(ms / 60000);
+      const s = Math.floor((ms % 60000) / 1000);
+      return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+    };
+    const tick = () => {
+      if (remain <= 0) {
+        countdownEls.forEach((el) => { el.textContent = '00:00'; });
+        return;
+      }
+      countdownEls.forEach((el) => { el.textContent = fmt(remain); });
+      remain -= 1000;
+    };
+    tick();
+    setInterval(tick, 1000);
+  };
+  startPromoCountdown();
+
+  /* ---------- Init ---------- */
+  restoreState();
+  updateTotal();
+  goToStep(currentStep);
+</script>

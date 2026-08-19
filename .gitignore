@@ -1,0 +1,8 @@
+node_modules/
+dist/
+.dev.vars
+.DS_Store
+*.log
+.wrangler/
+
+data/wp/posts.json

@@ -1,0 +1,246 @@
+---
+// Page Contact — commande de publications sponsorisées (modèle fluiid)
+// Disposition : formulaire en premier (haut mobile / gauche desktop), détails à droite,
+// puis « Comment commander ? » + avis clients 5★ en bas, notifications d'achat.
+import Base from '../../layouts/Base.astro';
+import ContactForm from '../../components/ContactForm.astro';
+
+const TITLE = 'Contact - Prim.net';
+const DESC = "Commander une publication sponsorisée sur Prim.net : packs, durée, options, paiement sécurisé par carte bancaire.";
+const CANONICAL = 'https://prim.net/contact/';
+---
+
+<Base title={TITLE} description={DESC} canonical={CANONICAL}>
+  <header class="entry-header">
+    <h1 class="entry-title">Contact</h1>
+  </header>
+
+  <!-- Rangée 1 : formulaire (gauche desktop / tout en haut mobile) + détails -->
+  <section class="contact-grid" aria-label="Commander une publication">
+    <div class="col-form">
+      <ContactForm />
+    </div>
+
+    <div class="col-details">
+      <p class="contact-kicker">Publications sponsorisées</p>
+      <h2 class="contact-title">Commander maintenant</h2>
+      <p>
+        Quatre étapes, moins de deux minutes. Choisissez votre pack, la durée de
+        publication et vos options : le total se calcule en direct. Nous revenons
+        vers vous sous 24–48&nbsp;h pour valider le calendrier et l'angle
+        éditorial. Paiement sécurisé par carte bancaire (Stripe).
+      </p>
+
+      <h3 class="roi-title">Tarifs de la durée de publication</h3>
+      <ul class="duree-tarifs">
+        <li><strong>1 an</strong> — inclus dans le pack</li>
+        <li><strong>5 ans</strong> — +20&nbsp;EUR</li>
+        <li><strong>10 ans</strong> — +50&nbsp;EUR</li>
+        <li><strong>À vie</strong> — +40&nbsp;EUR <em>(recommandé)</em></li>
+      </ul>
+
+      <h3 class="roi-title">Pourquoi c'est rentable ?</h3>
+      <ul class="roi-list">
+        <li><strong>🔍 SEO — un backlink qui compte.</strong> Votre lien depuis un média d'actualité indexé et suivi (dofollow) renforce l'autorité de votre domaine et améliore votre classement Google.</li>
+        <li><strong>🤖 GEO — visible par les IA.</strong> ChatGPT, Perplexity et Gemini citent les médias : votre contenu devient une source dans les réponses génératives.</li>
+        <li><strong>♾️ Durable — pas un placement éphémère.</strong> Votre article reste en ligne et indexé pendant la durée choisie, jusqu'à vie.</li>
+        <li><strong>💸 Un coût dérisoire.</strong> 91&nbsp;EUR = moins de 0,25&nbsp;EUR par jour sur un an, pour une visibilité permanente.</li>
+      </ul>
+
+      <ol class="contact-steps">
+        <li><strong>1. Votre demande</strong> — pack + durée + options dans le formulaire.</li>
+        <li><strong>2. Confirmation sous 24–48&nbsp;h</strong> — validation du calendrier et de l'angle.</li>
+        <li><strong>3. Publication</strong> — votre article paraît dans la rubrique choisie, avec vos liens.</li>
+      </ol>
+      <p class="contact-note">Tous les prix sont en EUR (EUR) et s'entendent hors TVA.</p>
+    </div>
+  </section>
+
+  <!-- Rangée 2 : comment commander + avis clients -->
+  <section class="contact-grid contact-grid-2" aria-label="Comment commander et avis clients">
+    <div class="col-howto">
+      <h2 class="howto-title">📦 Comment commander ?</h2>
+      <ol class="howto-list">
+        <li><strong>Paiement sécurisé</strong> — carte bancaire (Stripe), reçu immédiat.</li>
+        <li><strong>Confirmation par email</strong> — vous recevez les détails de votre commande et le calendrier prévu sur votre e-mail.</li>
+        <li><strong>Rédaction &amp; validation</strong> — délai selon le pack : 24&nbsp;h (Impact), 48&nbsp;h (Premium), 5 jours (Standard), 7 jours (Essentiel).</li>
+        <li><strong>Publication</strong> — l'article paraît dans la rubrique choisie, avec vos liens.</li>
+        <li><strong>Lien de livraison</strong> — vous recevez l'URL de votre publication, prête à partager.</li>
+      </ol>
+      <p class="howto-note">Une question avant de commander ? Écrivez-nous, nous répondons sous 24&nbsp;h.</p>
+    </div>
+
+    <div class="col-reviews">
+      <div class="reviews-head">
+        <h2 class="howto-title">Ils nous font confiance</h2>
+        <span class="reviews-note"><span class="reviews-stars" aria-hidden="true">★★★★★</span> 5,0/5 — clients en France et en Europe</span>
+      </div>
+      <ul class="reviews-list">
+        <li class="review-item">
+          <div class="review-top">
+            <span class="review-avatar" aria-hidden="true">S</span>
+            <span class="review-who"><strong>Sandra Meyer</strong><span>Directrice marketing — Lausanne</span></span>
+            <span class="review-stars" aria-hidden="true">★★★★★</span>
+          </div>
+          <p>« Nous étions en page 3 de Google sur notre mot-clé principal. Trois semaines après la publication, nous sommes en première position. Le lien dofollow a aussi renforcé tout notre référencement. »</p>
+        </li>
+        <li class="review-item">
+          <div class="review-top">
+            <span class="review-avatar" aria-hidden="true">M</span>
+            <span class="review-who"><strong>Marc Dubois</strong><span>Fondateur — Genève</span></span>
+            <span class="review-stars" aria-hidden="true">★★★★★</span>
+          </div>
+          <p>« Un accompagnement éditorial remarquable : l'article est exactement dans notre ton, les délais ont été tenus et les résultats sont mesurables dès le premier mois. Je recommande sans réserve. »</p>
+        </li>
+        <li class="review-item">
+          <div class="review-top">
+            <span class="review-avatar" aria-hidden="true">E</span>
+            <span class="review-who"><strong>Elena Müller</strong><span>CEO — Zurich</span></span>
+            <span class="review-stars" aria-hidden="true">★★★★★</span>
+          </div>
+          <p>« Le pack Premium vaut chaque franc. Relecture soignée, mise en avant sur la page d'accueil, et la visibilité dans les réponses d'IA (ChatGPT, Perplexity) est un vrai plus pour notre notoriété. »</p>
+        </li>
+      </ul>
+    </div>
+  </section>
+</Base>
+
+<style is:global>
+  /* Grille 50/50 : formulaire à gauche (desktop) ; mobile : formulaire en premier */
+  .contact-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 36px;
+    max-width: var(--maxw);
+    margin: 0 auto 44px;
+  }
+  .contact-grid-2 { margin-top: 8px; }
+
+  .col-form { order: 1; min-width: 0; }
+  .col-details { order: 2; min-width: 0; }
+  .col-howto { order: 1; min-width: 0; }
+  .col-reviews { order: 2; min-width: 0; }
+
+  @media (min-width: 900px) {
+    .contact-grid { grid-template-columns: 1fr 1fr; gap: 48px; align-items: start; }
+    /* formulaire à gauche = colonne 1 */
+    .col-form { order: 0; }
+    .col-details { order: 0; }
+  }
+
+  /* ---- Détails « Commander maintenant » ---- */
+  .contact-kicker { text-transform: uppercase; font-size: 12px; font-weight: 700; letter-spacing: .12em; color: var(--accent); margin: 0 0 8px; }
+  .contact-title { font-size: 26px; margin: 0 0 14px; }
+  .col-details p { font-size: 15px; line-height: 1.65; color: #222; }
+  .roi-title { font-size: 15px; font-weight: 800; margin: 22px 0 10px; text-transform: uppercase; letter-spacing: .05em; }
+  .duree-tarifs { list-style: none; margin: 0; padding: 0; border: 1px solid #c8c8c8; border-radius: 8px; overflow: hidden; }
+  .duree-tarifs li { display: flex; justify-content: space-between; gap: 12px; font-size: 13.5px; line-height: 1.5; padding: 9px 14px; border-top: 1px solid #e4e4e4; color: #262626; }
+  .duree-tarifs li:first-child { border-top: 0; }
+  .duree-tarifs em { font-style: normal; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; color: var(--accent); }
+  .roi-list { list-style: none; margin: 0; padding: 0; }
+  .roi-list li { font-size: 13.5px; line-height: 1.6; padding: 10px 0; border-top: 1px solid #c8c8c8; color: #262626; }
+  .roi-list li strong { display: block; margin-bottom: 2px; }
+  .contact-steps { margin: 18px 0 0; padding-left: 18px; font-size: 14px; line-height: 1.7; color: #333; }
+  .contact-note { font-size: 13px; color: #5c5c5c; margin-top: 16px; }
+
+  /* ---- Comment commander ? ---- */
+  .col-howto {
+    padding: 22px 24px;
+    background: #fff;
+    border: 1px solid #d5d5d5;
+    border-left: 4px solid var(--accent);
+    border-radius: 10px;
+  }
+  .howto-title { font-size: 18px; font-weight: 800; margin: 0 0 12px; color: #111; }
+  .howto-list { margin: 0; padding-left: 18px; font-size: 14px; line-height: 1.6; color: #333; }
+  .howto-list li + li { margin-top: 8px; }
+  .howto-note { font-size: 13px; color: #5c5c5c; margin: 16px 0 0; }
+
+  /* ---- Avis clients ---- */
+  .col-reviews { padding: 22px 24px; background: #fff; border: 1px solid #d5d5d5; border-radius: 10px; }
+  .reviews-head { margin-bottom: 14px; }
+  .reviews-note { display: block; font-size: 13px; font-weight: 700; color: #b8860b; margin-top: 2px; }
+  .reviews-stars { color: #f5a623; letter-spacing: 2px; }
+  .reviews-list { list-style: none; margin: 0; padding: 0; }
+  .review-item { padding: 12px 0; border-top: 1px solid #e4e4e4; }
+  .review-item:first-child { border-top: 0; padding-top: 0; }
+  .review-top { display: flex; align-items: center; gap: 10px; margin-bottom: 6px; }
+  .review-avatar {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 34px; height: 34px; border-radius: 50%; flex: 0 0 auto;
+    background: var(--accent); color: #fff; font-weight: 800; font-size: 15px;
+  }
+  .review-who { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; line-height: 1.25; }
+  .review-who strong { font-size: 14px; color: #111; }
+  .review-who span { font-size: 12px; color: #6b6b6b; }
+  .review-item .review-stars { font-size: 13px; }
+  .review-item p { font-size: 13.5px; line-height: 1.6; color: #333; margin: 0; font-style: italic; }
+
+  /* ---- Notifications d'achat (preuve sociale) ---- */
+  .sale-notif {
+    position: fixed; left: 18px; bottom: 18px; z-index: 9999;
+    display: flex; align-items: center; gap: 11px;
+    max-width: 340px; padding: 11px 15px 11px 11px;
+    background: #fff; border: 1px solid #d5d5d5; border-radius: 12px;
+    box-shadow: 0 8px 28px rgba(0, 0, 0, 0.18);
+    font-size: 13px; line-height: 1.35; color: #222;
+    opacity: 0; transform: translateY(16px);
+    transition: opacity 0.4s ease, transform 0.4s ease;
+    pointer-events: none;
+  }
+  .sale-notif.is-visible { opacity: 1; transform: translateY(0); }
+  .sale-avatar {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 38px; height: 38px; border-radius: 50%; flex: 0 0 auto;
+    background: linear-gradient(135deg, var(--accent), #7a0f28);
+    color: #fff; font-weight: 800; font-size: 16px;
+  }
+  .sale-text { display: flex; flex-direction: column; }
+  .sale-text strong { font-size: 13.5px; color: #111; }
+  .sale-text span { color: #6b6b6b; font-size: 12px; }
+  .sale-check { margin-left: auto; flex: 0 0 auto; font-size: 17px; }
+  @media (max-width: 639px) {
+    .sale-notif { left: 12px; right: 12px; bottom: 12px; max-width: none; }
+  }
+</style>
+
+<script is:inline>
+  // Notifications d'achat simulées — preuve sociale (Suisse)
+  (function () {
+    var notifs = [
+      { n: 'Mathieu', v: 'Genève', j: 'chef d\'entreprise', a: 'vient d\'acheter un article', m: 'il y a 2 min' },
+      { n: 'Sarah', v: 'Lausanne', j: 'directrice marketing', a: 'vient de souscrire au pack Standard', m: 'il y a 4 min' },
+      { n: 'Nicolas', v: 'Zurich', j: 'architecte', a: 'vient d\'acheter un article', m: 'il y a 7 min' },
+      { n: 'Camille', v: 'Fribourg', j: 'avocate', a: 'vient de commander l\'offre 5 ans', m: 'il y a 9 min' },
+      { n: 'Lucas', v: 'Bâle', j: 'CEO', a: 'vient d\'acheter le pack Premium', m: 'il y a 12 min' },
+      { n: 'Anna', v: 'Berne', j: 'consultante SEO', a: 'vient d\'acheter un article', m: 'il y a 15 min' },
+      { n: 'David', v: 'Neuchâtel', j: 'notaire', a: 'vient de souscrire à l\'offre À vie', m: 'il y a 18 min' },
+      { n: 'Julie', v: 'Sion', j: 'gérante de PME', a: 'vient d\'acheter un article', m: 'il y a 21 min' },
+      { n: 'Thomas', v: 'Lugano', j: 'restaurateur', a: 'vient de commander le pack Essentiel', m: 'il y a 25 min' },
+      { n: 'Claire', v: 'Montreux', j: 'kinésithérapeute', a: 'vient d\'acheter un article', m: 'il y a 28 min' },
+      { n: 'Patrick', v: 'Nyon', j: 'gérant de PME', a: 'vient d\'acheter le pack Standard', m: 'il y a 31 min' },
+      { n: 'Laura', v: 'Lucerne', j: 'fondatrice de startup', a: 'vient de commander l\'offre 10 ans', m: 'il y a 35 min' }
+    ];
+    var el = document.createElement('div');
+    el.className = 'sale-notif';
+    el.setAttribute('aria-hidden', 'true');
+    document.body.appendChild(el);
+    var last = -1;
+    function show() {
+      var i;
+      do { i = Math.floor(Math.random() * notifs.length); } while (i === last && notifs.length > 1);
+      last = i;
+      var x = notifs[i];
+      el.innerHTML = '<span class="sale-avatar">' + x.n.charAt(0) + '</span>' +
+        '<span class="sale-text"><strong>' + x.n + ' de ' + x.v + ', ' + x.j + ',</strong><span>' + x.a + ' — ' + x.m + '</span></span>' +
+        '<span class="sale-check">✅</span>';
+      el.classList.add('is-visible');
+      setTimeout(function () { el.classList.remove('is-visible'); }, 6500);
+    }
+    // Première apparition après 8 s, puis toutes les 20–40 s
+    setTimeout(function tick() {
+      show();
+      setTimeout(tick, 20000 + Math.random() * 20000);
+    }, 8000);
+  })();
+</script>
