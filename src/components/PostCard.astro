@@ -1,6 +1,7 @@
 ---
 // Carte d'article média — variantes : 'grid' (défaut) | 'line' (fil)
-import { decodeEntities, getImageMeta, getPostCategories, getReadingTime } from '../lib/wp.mjs';
+// data-lang + data-title servent au filtrage langue/recherche côté client.
+import { decodeEntities, getImageMeta, getPostCategories, getPostLang, getReadingTime } from '../lib/wp.mjs';
 
 interface Props {
   post: any;
@@ -12,19 +13,21 @@ const img = getImageMeta(post, 'medium_large');
 const cats = getPostCategories(post);
 const cat = cats[0];
 const href = `/${post.slug}/`;
+const lang = getPostLang(post);
 const dateLong = new Date(post.date).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
 const dateShort = new Date(post.date).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' });
 const excerpt = decodeEntities((post.excerpt?.rendered ?? '').replace(/<[^>]+>/g, ' ')).replace(/\s+/g, ' ').trim().replace(/…$/, '');
+const searchKey = title.toLowerCase();
 ---
 
 {
   variant === 'line' ? (
-    <article class="feed-item">
+    <article class="feed-item" data-lang={lang} data-title={searchKey}>
       <time class="feed-date" datetime={post.date}>{dateShort}</time>
       <h3 class="feed-title"><a href={href}>{title}</a></h3>
     </article>
   ) : (
-    <article class="card">
+    <article class="card" data-lang={lang} data-title={searchKey}>
       {img.src && (
         <div class="card-media">
           <a href={href} tabindex="-1" aria-hidden="true">

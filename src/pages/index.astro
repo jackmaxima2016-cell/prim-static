@@ -1,10 +1,10 @@
 ---
-// Accueil — page magazine : hero + à la une + rubriques + fil d'actualités
+// Accueil — design Newsmag Scandal : articles récents avec photo en haut,
+// puis 20 rubriques × 10 articles (= 200 articles max).
 // Le H1 et le <title> restent identiques à l'audit (contrat SEO).
 import Base from '../layouts/Base.astro';
 import PostCard from '../components/PostCard.astro';
-import Sidebar from '../components/Sidebar.astro';
-import { getPosts, getPages, PAGE_SIZE, getCategories, getImageMeta, getPostCategories, getPostAuthor, getReadingTime, decodeEntities } from '../lib/wp.mjs';
+import { getPosts, getPages, PAGE_SIZE, getCategories, getImageMeta, getPostCategories, getPostAuthor, getPostLang, getCategoryLang, getReadingTime, decodeEntities } from '../lib/wp.mjs';
 import { getSeoForUrl } from '../lib/seo.mjs';
 
 const posts = getPosts();
@@ -17,27 +17,35 @@ const TITLE = homeSeo?.title ?? "Prim.net - L'actualités au quotidien en PRIM";
 const DESC = homeSeo?.description ?? "L'actualités au quotidien en PRIM";
 
 // ---- Composition éditoriale ----
-const [hero, ...rest] = posts;
-const edito = rest.slice(0, 5);                 // « À la une »
-const used = new Set([hero.slug, ...edito.map((p) => p.slug)]);
+// Bloc « À la une » : les 10 articles les plus récents (avec photo) en haut
+const une = posts.slice(0, 10);
+const [hero, ...recents] = une;
+const usedSlugs = new Set(une.map((p) => p.slug));
 
-// Rubriques : catégories les plus fournies (ordre du site WordPress)
+// Rubriques : 20 catégories les plus fournies, 10 articles chacune (200 max)
 const rubriques = getCategories()
   .filter((c) => c.count > 0)
   .sort((a, b) => b.count - a.count)
-  .slice(0, 8)
+  .slice(0, 20)
   .map((c) => {
-    const list = posts.filter((p) => !used.has(p.slug) && getPostCategories(p).some((pc) => pc.id === c.id)).slice(0, 3);
-    list.forEach((p) => used.add(p.slug));
-    return { slug: c.slug, name: decodeEntities(c.name), count: c.count, posts: list };
+    const list = posts
+      .filter((p) => !usedSlugs.has(p.slug) && getPostCategories(p).some((pc) => pc.id === c.id))
+      .slice(0, 10);
+    list.forEach((p) => usedSlugs.add(p.slug));
+    return {
+      slug: c.slug,
+      name: decodeEntities(c.name),
+      count: c.count,
+      lang: getCategoryLang(c),
+      posts: list,
+    };
   })
   .filter((r) => r.posts.length > 0);
-
-const feed = posts.filter((p) => !used.has(p.slug)); // fil complet (garantit le contrat)
 
 const heroImg = getImageMeta(hero, 'large');
 const heroCat = getPostCategories(hero)[0];
 const heroAuthor = getPostAuthor(hero);
+const heroLang = getPostLang(hero);
 const heroExcerpt = decodeEntities((hero.excerpt?.rendered ?? '').replace(/<[^>]+>/g, ' ')).replace(/\s+/g, ' ').trim().replace(/…$/, '');
 
 const jsonLd = [
@@ -58,11 +66,11 @@ const jsonLd = [
 <Base title={TITLE} description={DESC} canonical={site + '/'} jsonLd={jsonLd} relNext="/page/2/">
   <h1 class="sr-only">Prim.net</h1>
 
-  <!-- ARTICLE PRINCIPAL -->
-  <section class="hero" aria-label="Article principal">
+  <!-- À LA UNE : les articles les plus récents avec photo en haut -->
+  <section class="hero" aria-label="À la une" data-lang-group data-lang={heroLang}>
     <div class="hero-grid">
-      <div class="hero-img-wrap">
-        <a href={`/${hero.slug}/`}>
+      <div class="hero-main" data-lang={heroLang}>
+        <a href={`/${hero.slug}/`} class="hero-img-wrap">
           {heroImg.src && (
             <img
               class="hero-img"
@@ -75,39 +83,48 @@ const jsonLd = [
             />
           )}
         </a>
-      </div>
-      <div class="hero-body">
-        <p class="hero-label">À la une</p>
-        {heroCat && <span class="badge">{heroCat.name}</span>}
-        <h2 class="hero-title"><a href={`/${hero.slug}/`}>{decodeEntities(hero.title?.rendered ?? '')}</a></h2>
-        {heroExcerpt && <p class="hero-excerpt">{heroExcerpt}</p>}
-        <div class="meta">
-          <time datetime={hero.date}>{new Date(hero.date).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}</time>
-          <span class="sep">·</span>
-          <span>par {heroAuthor}</span>
-          <span class="sep">·</span>
-          <span>{getReadingTime(hero)} min de lecture</span>
+        <div class="hero-body">
+          <p class="hero-label">À la une</p>
+          {heroCat && <span class="badge">{heroCat.name}</span>}
+          <h2 class="hero-title"><a href={`/${hero.slug}/`}>{decodeEntities(hero.title?.rendered ?? '')}</a></h2>
+          {heroExcerpt && <p class="hero-excerpt">{heroExcerpt}</p>}
+          <div class="meta">
+            <time datetime={hero.date}>{new Date(hero.date).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}</time>
+            <span class="sep">·</span>
+            <span>par {heroAuthor}</span>
+            <span class="sep">·</span>
+            <span>{getReadingTime(hero)} min de lecture</span>
+          </div>
         </div>
       </div>
+
+      <div class="hero-recents">
+        {recents.map((p) => (
+          <article class="recent-item" data-lang={getPostLang(p)}>
+            <a href={`/${p.slug}/`} tabindex="-1" aria-hidden="true">
+              {getImageMeta(p, 'medium_large').src && (
+                <img
+                  class="recent-thumb"
+                  src={getImageMeta(p, 'medium_large').src}
+                  alt=""
+                  loading="lazy"
+                  decoding="async"
+                />
+              )}
+            </a>
+            <div>
+              <h3 class="recent-title"><a href={`/${p.slug}/`}>{decodeEntities(p.title?.rendered ?? '')}</a></h3>
+              <time class="recent-date" datetime={p.date}>{new Date(p.date).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' })}</time>
+            </div>
+          </article>
+        ))}
+      </div>
     </div>
   </section>
 
-  <!-- À LA UNE + FIL COMPLET avec sidebar droite -->
-  <div class="layout-ws">
-  <div class="layout-main">
-  <!-- À LA UNE -->
-  <section class="section-block" aria-label="À la une">
-    <div class="section-head">
-      <h2 class="section-title">À la une</h2>
-    </div>
-    <div class="edito-grid">
-      {edito.map((post) => <PostCard post={post} />)}
-    </div>
-  </section>
-
-  <!-- RUBRIQUES PAR CATÉGORIE -->
+  <!-- RUBRIQUES : 20 catégories × 10 articles -->
   {rubriques.map((r) => (
-    <section class="section-block" id={`rubrique-${r.slug}`} aria-label={r.name}>
+    <section class="section-block" id={`rubrique-${r.slug}`} aria-label={r.name} data-lang-group data-lang={r.lang}>
       <div class="section-head">
         <h2 class="section-title">{r.name}</h2>
         <span class="section-link">{r.count} articles</span>
@@ -118,21 +135,8 @@ const jsonLd = [
     </section>
   ))}
 
-  <!-- FIL COMPLET -->
-  <section class="section-block" aria-label="Toutes les actualités">
-    <div class="section-head">
-      <h2 class="section-title">Toutes les actualités</h2>
-    </div>
-    <div class="feed">
-      {feed.map((post) => <PostCard post={post} variant="line" />)}
-    </div>
-  </section>
-
   <nav class="pagination" aria-label="Pagination">
     <span class="page-info">Page 1 sur {totalPages}</span>
-    <a rel="next" href="/page/2/">Page suivante →</a>
+    <a rel="next" href="/page/2/">Plus d'actualités →</a>
   </nav>
-  </div><!-- /layout-main -->
-  <Sidebar />
-  </div><!-- /layout-ws -->
 </Base>

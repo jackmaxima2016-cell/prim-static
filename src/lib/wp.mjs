@@ -147,3 +147,60 @@ export function stripHtml(html = '') {
 
 // Nombre d'articles par page (identique au réglage WordPress prim.net)
 export const PAGE_SIZE = 12;
+
+// ============================================================
+// Multilingue — le site prim.net publie dans 12 langues.
+// La langue d'un article est déduite du suffixe de ses catégories
+// (ex: actualites-en -> en, noticias-es -> es) ou d'un slug encodé arabe.
+// ============================================================
+export const LANGS = [
+  { code: 'fr', label: 'Français' },
+  { code: 'en', label: 'English' },
+  { code: 'es', label: 'Español' },
+  { code: 'de', label: 'Deutsch' },
+  { code: 'it', label: 'Italiano' },
+  { code: 'pl', label: 'Polski' },
+  { code: 'ar', label: 'العربية' },
+  { code: 'nl', label: 'Nederlands' },
+  { code: 'pt', label: 'Português' },
+  { code: 'tr', label: 'Türkçe' },
+  { code: 'nn', label: 'Norsk' },
+  { code: 'ru', label: 'Русский' },
+];
+
+const _LANG_SUFFIX = /-(en|es|de|it|pl|ar|nl|pt|tr|nn|ru|fr)$/;
+
+let _catLangMap = null;
+function catLangMap() {
+  if (_catLangMap) return _catLangMap;
+  _catLangMap = new Map();
+  for (const c of getCategories()) {
+    const slug = c.slug || '';
+    let lang = 'fr';
+    const m = slug.match(_LANG_SUFFIX);
+    if (m) {
+      lang = m[1];
+    } else if (slug.includes('%')) {
+      try {
+        if (/[\u0600-\u06FF]/.test(decodeURIComponent(slug))) lang = 'ar';
+      } catch { /* slug invalide -> fr */ }
+    }
+    _catLangMap.set(c.id, lang);
+  }
+  return _catLangMap;
+}
+
+// Langue d'un article : première catégorie à suffixe non-fr explicite, sinon fr
+export function getPostLang(post) {
+  const cats = getPostCategories(post);
+  for (const c of cats) {
+    const l = catLangMap().get(c.id);
+    if (l && l !== 'fr') return l;
+  }
+  return 'fr';
+}
+
+// Langue d'une catégorie (depuis son slug)
+export function getCategoryLang(cat) {
+  return catLangMap().get(cat.id) ?? 'fr';
+}

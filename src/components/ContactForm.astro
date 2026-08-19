@@ -1,6 +1,6 @@
 ---
 // Formulaire multistep de qualification des prospects — publications sponsorisées
-// Étape 1 : pack (169 → 1 499 EUR) · Étape 2 : durée + options · Étape 3 : infos · Étape 4 : projet
+// Étape 1 : pack (338 → 2 998 EUR) · Étape 2 : durée + options · Étape 3 : infos · Étape 4 : projet
 // Total en direct, persistance localStorage (entrées partielles conservées),
 // anti-bot Turnstile vérifié par la Pages Function /api/contact → FormSubmit.
 import { getCategories, decodeEntities } from '../lib/wp.mjs';
@@ -15,37 +15,37 @@ const rubriques = getCategories()
 
 const packs = [
   {
-    id: 'essentiel', name: 'Essentiel', price: 91, old: 169, tagline: 'Pour une première visibilité',
+    id: 'essentiel', name: 'Essentiel', price: 182, old: 338, tagline: 'Pour une première visibilité',
     feats: ['Article de 400–600 mots', '1 lien dofollow vers votre site (SEO)', 'Publication sous 7 jours', '1 rubrique au choix', 'Durée de publication incluse'],
   },
   {
-    id: 'standard', name: 'Standard', price: 215, old: 399, tagline: 'Le meilleur rapport visibilité/prix', popular: true,
+    id: 'standard', name: 'Standard', price: 430, old: 798, tagline: 'Le meilleur rapport visibilité/prix', popular: true,
     feats: ['Article de 700–900 mots', '2 liens + 1 lien interne (SEO renforcé)', 'Publication sous 5 jours', 'Mise en avant dans le fil d’actualité', 'Badge « Contenu sponsorisé »', 'Durée de publication incluse'],
   },
   {
-    id: 'premium', name: 'Premium', price: 431, old: 799, tagline: 'Une présence éditoriale affirmée',
+    id: 'premium', name: 'Premium', price: 862, old: 1598, tagline: 'Une présence éditoriale affirmée',
     feats: ['Article de 1 000–1 400 mots', '3 liens + 2 liens internes', 'Publication sous 48 h', 'Mise en avant sur la page d’accueil', 'Relecture éditoriale prioritaire', 'Durée de publication incluse'],
   },
   {
-    id: 'impact', name: 'Impact', price: 809, old: 1499, tagline: 'Dossier complet ou campagne multi-articles',
+    id: 'impact', name: 'Impact', price: 1618, old: 2998, tagline: 'Dossier complet ou campagne multi-articles',
     feats: ['Dossier de 2 000+ mots ou 3 articles', 'Liens renforcés (5 + 3 internes)', 'Publication sous 24 h', 'Accompagnement éditorial dédié', 'Mention dans la newsletter', 'Durée de publication incluse'],
   },
 ];
 
 const durees = [
   { id: 'd1', value: '1 an', price: 0, note: 'Testez l’impact' },
-  { id: 'd5', value: '5 ans', price: 20, note: 'Visibilité confirmée' },
-  { id: 'd10', value: '10 ans', price: 50, note: 'Ancrage durable' },
-  { id: 'dvie', value: 'À vie', price: 40, note: 'Recommandé — patrimoine de liens', recommended: true },
+  { id: 'd5', value: '5 ans', price: 40, note: 'Visibilité confirmée' },
+  { id: 'd10', value: '10 ans', price: 100, note: 'Ancrage durable' },
+  { id: 'dvie', value: 'À vie', price: 80, note: 'Recommandé — patrimoine de liens', recommended: true },
 ];
 
 const options = [
-  { id: 'opt-redaction', name: 'opt_redaction', label: 'Rédaction par nos soins', note: 'vous fournissez le sujet, nous écrivons', price: 71, old: 149 },
-  { id: 'opt-lien', name: 'opt_lien', label: 'Lien supplémentaire', note: 'un backlink de plus vers votre site', price: 23, old: 49 },
-  { id: 'opt-express', name: 'opt_express', label: 'Publication express 24 h', note: 'priorité absolue au planning', price: 47, old: 99 },
-  { id: 'opt-reseaux', name: 'opt_reseaux', label: 'Post LinkedIn + Facebook', note: 'annonce de votre article', price: 23, old: 49 },
-  { id: 'opt-newsletter', name: 'opt_newsletter', label: 'Mise en avant newsletter', note: 'à nos abonnés', price: 38, old: 79 },
-  { id: 'opt-article', name: 'opt_article', label: 'Article additionnel', note: 'un article de plus dans le même pack', price: 95, old: 199 },
+  { id: 'opt-redaction', name: 'opt_redaction', label: 'Rédaction par nos soins', note: 'vous fournissez le sujet, nous écrivons', price: 142, old: 298 },
+  { id: 'opt-lien', name: 'opt_lien', label: 'Lien supplémentaire', note: 'un backlink de plus vers votre site', price: 46, old: 98 },
+  { id: 'opt-express', name: 'opt_express', label: 'Publication express 24 h', note: 'priorité absolue au planning', price: 94, old: 198 },
+  { id: 'opt-reseaux', name: 'opt_reseaux', label: 'Post LinkedIn + Facebook', note: 'annonce de votre article', price: 46, old: 98 },
+  { id: 'opt-newsletter', name: 'opt_newsletter', label: 'Mise en avant newsletter', note: 'à nos abonnés', price: 76, old: 158 },
+  { id: 'opt-article', name: 'opt_article', label: 'Article additionnel', note: 'un article de plus dans le même pack', price: 190, old: 398 },
 ];
 
 const stepTitles = ['Choisissez votre pack', 'Durée & options', 'Vos informations', 'Votre projet'];

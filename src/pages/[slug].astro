@@ -40,14 +40,17 @@ const cats = getPostCategories(entry);
 const cat = cats[0];
 const catId = cat?.id;
 
-// Articles liés : même rubrique d'abord, sinon les plus récents
-// (index pré-calculé : pas de filtre O(n) par page)
-const related = catId
-  ? getPostsByCategory(catId).filter((p) => p.slug !== entry.slug).slice(0, 3)
+// Articles similaires : triés par type d'article (même rubrique d'abord),
+// puis par date de publication décroissante en complément.
+const relatedByType = catId
+  ? getPostsByCategory(catId).filter((p) => p.slug !== entry.slug).slice(0, 6)
   : [];
-const relatedFallback = related.length
-  ? related
-  : getPosts().filter((p) => p.slug !== entry.slug).slice(0, 3);
+const relatedFallback = relatedByType.length >= 3
+  ? relatedByType
+  : [
+      ...relatedByType,
+      ...getPosts().filter((p) => p.slug !== entry.slug && !relatedByType.some((r) => r.slug === p.slug)).slice(0, 6 - relatedByType.length),
+    ];
 
 const jsonLd = kind === 'post'
   ? [
@@ -135,8 +138,8 @@ const jsonLd = kind === 'post'
     <div class="entry-content" set:html={entry.content?.rendered ?? ''} />
 
     {kind === 'post' && relatedFallback.length > 0 && (
-      <section class="related" aria-label="Articles liés">
-        <h2 class="related-title">À lire aussi</h2>
+      <section class="related" aria-label="Articles similaires">
+        <h2 class="related-title">Articles similaires</h2>
         <div class="related-grid">
           {relatedFallback.map((post) => (
             <div class="related-card">
