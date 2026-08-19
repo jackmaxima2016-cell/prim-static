@@ -5,7 +5,7 @@ import zlib from 'node:zlib';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-const DATA_DIR = path.join(path.dirname(fileURLToPath(import.meta.url)), '..', '..', 'data', 'wp');
+const DATA_DIR = path.join(path.dirname(fileURLToPath(import.meta.url)), '..', 'data', 'wp');
 const gz = path.join(DATA_DIR, 'posts.json.gz');
 const out = path.join(DATA_DIR, 'posts.json');
 
