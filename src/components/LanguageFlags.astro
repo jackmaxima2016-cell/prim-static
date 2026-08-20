@@ -1,0 +1,15 @@
+---
+// Rangée de drapeaux de langue — visibles directement (pas de menu à ouvrir).
+// Chaque bouton porte data-lang ; l'état actif est géré côté client (classe .is-active).
+import { LANGS } from '../lib/wp.mjs';
+---
+<div class="lang-flags" role="group" aria-label="Choisir la langue">
+  <button type="button" class="lang-flag" data-lang="all" title="Toutes les langues" aria-label="Toutes les langues">
+    <span class="lang-flag-icon" aria-hidden="true">🌐</span>
+  </button>
+  {LANGS.map((l) => (
+    <button type="button" class="lang-flag" data-lang={l.code} title={l.label} aria-label={l.label}>
+      <span class="lang-flag-icon" aria-hidden="true">{l.flag}</span>
+    </button>
+  ))}
+</div>

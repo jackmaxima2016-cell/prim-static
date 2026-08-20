@@ -4,6 +4,7 @@
 // logo centré (image d'origine), navigation sticky, footer optimisé.
 import { decodeEntities, getCategories } from '../lib/wp.mjs';
 import LanguageSelect from '../components/LanguageSelect.astro';
+import LanguageFlags from '../components/LanguageFlags.astro';
 import '../styles/global.css';
 
 interface Props {
@@ -93,26 +94,20 @@ gtag('config', '${GA4_ID}', { anonymize_ip: true });`}></script>
     }
   </head>
   <body>
-    <!-- Bandeau supérieur : date + tagline | recherche -->
+    <!-- Bandeau supérieur : date + tagline | recherche + drapeaux (toujours visibles) -->
     <div class="topbar">
       <div class="container topbar-inner">
         <span class="topbar-date">{today}</span>
         <span class="topbar-tagline">L'actualités au quotidien en PRIM</span>
         <div class="topbar-right">
-          <button class="search-toggle" id="search-toggle" type="button" aria-expanded="false" aria-controls="search-bar" aria-label="Rechercher">
-            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 2a8 8 0 1 0 4.9 14.3L20 21l1-1-5-5.1A8 8 0 0 0 10 2zm0 2a6 6 0 1 1 0 12 6 6 0 0 1 0-12z"/></svg>
-          </button>
+          <form class="topbar-search" action="/" method="get" role="search">
+            <input type="search" name="s" id="search-input" placeholder="Rechercher…" aria-label="Rechercher" />
+            <button type="submit" aria-label="Rechercher">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 2a8 8 0 1 0 4.9 14.3L20 21l1-1-5-5.1A8 8 0 0 0 10 2zm0 2a6 6 0 1 1 0 12 6 6 0 0 1 0-12z"/></svg>
+            </button>
+          </form>
+          <LanguageFlags />
         </div>
-      </div>
-    </div>
-
-    <!-- Barre de recherche (révélée au clic) -->
-    <div class="search-bar" id="search-bar">
-      <div class="search-bar-inner">
-        <form action="/" method="get" role="search" id="search-form">
-          <input type="search" name="s" id="search-input" placeholder="Rechercher un article, un sujet…" aria-label="Rechercher" />
-          <button type="submit">Rechercher</button>
-        </form>
       </div>
     </div>
 
@@ -147,9 +142,6 @@ gtag('config', '${GA4_ID}', { anonymize_ip: true });`}></script>
           </div>
         </div>
         <a href="/contact/">Contact</a>
-        <div class="nav-lang">
-          <LanguageSelect id="lang-select-nav" />
-        </div>
       </div>
     </nav>
 
@@ -288,54 +280,71 @@ gtag('config', '${GA4_ID}', { anonymize_ip: true });`}></script>
         document.addEventListener('keydown', (e) => { if (e.key === 'Escape') setDrop(false); });
       }
 
-      // Recherche : révéler la barre
-      const searchToggle = document.getElementById('search-toggle');
-      const searchBar = document.getElementById('search-bar');
-      if (searchToggle && searchBar) {
-        searchToggle.addEventListener('click', () => {
-          const open = searchBar.classList.toggle('is-open');
-          searchToggle.setAttribute('aria-expanded', String(open));
-          if (open) document.getElementById('search-input').focus();
-        });
-      }
-
-      // Sélecteur de langue : filtre les cartes marquées [data-lang]
-      // (filtrage côté client — le contenu HTML complet reste indexé pour le SEO)
-      // Deux instances (nav + footer) sont synchronisées.
+      // Sélecteur de langue (drapeaux + select) + recherche client.
+      // Filtre les cartes marquées [data-lang] / [data-title] — le HTML complet reste indexé (SEO).
+      const langFlags = document.querySelectorAll('.lang-flag');
       const langSelects = document.querySelectorAll('.lang-select');
       const LANG_KEY = 'prim_lang_v1';
-      const applyLangFilter = (code) => {
+      let currentLang = 'fr';
+      let currentQuery = '';
+
+      const applyFilters = () => {
         const items = document.querySelectorAll('[data-lang]');
+        const q = currentQuery.trim().toLowerCase();
         items.forEach((el) => {
           const lang = el.getAttribute('data-lang');
-          el.hidden = code !== 'all' && lang !== code;
+          const byLang = currentLang === 'all' || lang === currentLang;
+          let byQuery = true;
+          if (q) {
+            const title = (el.getAttribute('data-title') || '').toLowerCase();
+            byQuery = title.includes(q);
+          }
+          el.hidden = !(byLang && byQuery);
         });
         // Masquer les sections devenues vides
         document.querySelectorAll('[data-lang-group]').forEach((sec) => {
           const visible = sec.querySelectorAll('[data-lang]:not([hidden])').length > 0;
           sec.hidden = !visible;
         });
+        // État actif des drapeaux
+        langFlags.forEach((b) => {
+          const active = b.getAttribute('data-lang') === currentLang;
+          b.classList.toggle('is-active', active);
+          b.setAttribute('aria-pressed', String(active));
+        });
       };
-      const syncLangSelects = (code) => {
+      const setLang = (code) => {
+        currentLang = code;
+        try { localStorage.setItem(LANG_KEY, code); } catch (e) {}
         langSelects.forEach((s) => { s.value = code; });
+        applyFilters();
       };
-      const initLang = () => {
+      const initFilters = () => {
         let code = 'fr';
         try {
-          const q = new URLSearchParams(window.location.search).get('lang');
-          code = q || localStorage.getItem(LANG_KEY) || 'fr';
+          const params = new URLSearchParams(window.location.search);
+          code = params.get('lang') || localStorage.getItem(LANG_KEY) || 'fr';
+          currentQuery = params.get('s') || '';
+          const input = document.getElementById('search-input');
+          if (input && currentQuery) input.value = currentQuery;
         } catch (e) {}
-        syncLangSelects(code);
-        applyLangFilter(code);
+        setLang(code);
       };
-      langSelects.forEach((sel) => {
-        sel.addEventListener('change', () => {
-          try { localStorage.setItem(LANG_KEY, sel.value); } catch (e) {}
-          syncLangSelects(sel.value);
-          applyLangFilter(sel.value);
-        });
+      langFlags.forEach((b) => {
+        b.addEventListener('click', () => setLang(b.getAttribute('data-lang')));
       });
-      initLang();
+      langSelects.forEach((sel) => {
+        sel.addEventListener('change', () => setLang(sel.value));
+      });
+      // Recherche en temps réel (filtre les cartes à la saisie)
+      const searchInput = document.getElementById('search-input');
+      if (searchInput) {
+        searchInput.addEventListener('input', () => {
+          currentQuery = searchInput.value;
+          applyFilters();
+        });
+      }
+      initFilters();
 
       // Bouton retour en haut : apparaît après 400 px de scroll
       const backToTop = document.getElementById('back-to-top');

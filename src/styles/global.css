@@ -50,13 +50,55 @@ a { color: inherit; }
 .topbar { background: var(--ink); color: #cfcfcf; font-size: 12px; }
 .topbar-inner {
   display: flex; align-items: center; justify-content: space-between;
-  gap: 14px; padding-top: 7px; padding-bottom: 7px; min-height: 36px;
+  flex-wrap: wrap; gap: 8px 14px; padding-top: 7px; padding-bottom: 7px; min-height: 36px;
 }
 .topbar-date { text-transform: uppercase; letter-spacing: 0.06em; color: #b9b9b9; }
 .topbar-tagline { display: none; color: #8f8f8f; }
-.topbar-right { display: flex; align-items: center; gap: 14px; }
+.topbar-right { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
 
-/* Sélecteur de langue (nav + footer) */
+/* Barre de recherche toujours visible */
+.topbar-search { display: flex; align-items: center; gap: 0; }
+.topbar-search input[type="search"] {
+  width: 170px; padding: 6px 10px; font: inherit; font-size: 13px;
+  border: 1px solid #3a3a3a; border-right: none; border-radius: 4px 0 0 4px;
+  background: #fff; color: #111; line-height: 1.3;
+}
+.topbar-search input[type="search"]::placeholder { color: #8a8a8a; }
+.topbar-search input[type="search"]:focus { outline: 2px solid var(--accent); outline-offset: -1px; }
+.topbar-search button {
+  display: inline-flex; align-items: center; justify-content: center;
+  padding: 0 12px; min-height: 32px; border: 1px solid #3a3a3a; border-left: none;
+  border-radius: 0 4px 4px 0; background: var(--accent); color: #fff; cursor: pointer;
+}
+.topbar-search button:hover { background: var(--accent-dark); }
+.topbar-search svg { width: 15px; height: 15px; fill: currentColor; }
+
+/* Rangée de drapeaux — visibles directement (sans menu) */
+.lang-flags { display: flex; align-items: center; gap: 3px; }
+.lang-flag {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 30px; height: 30px; padding: 0; border: 1px solid transparent;
+  border-radius: 6px; background: transparent; cursor: pointer;
+  font-size: 17px; line-height: 1; transition: background 0.12s, border-color 0.12s, transform 0.12s;
+}
+.lang-flag:hover { background: #2c2c2c; }
+.lang-flag.is-active {
+  background: #2c2c2c; border-color: var(--accent);
+  box-shadow: 0 0 0 1px var(--accent);
+}
+.lang-flag-icon { display: block; line-height: 1; }
+
+/* Mobile : drapeaux plus compacts (tous visibles), recherche pleine largeur */
+@media (max-width: 639px) {
+  .topbar-inner { gap: 6px 10px; }
+  .topbar-right { width: 100%; justify-content: space-between; gap: 8px; }
+  .topbar-search { flex: 1 1 auto; min-width: 0; }
+  .topbar-search input[type="search"] { width: 100%; min-width: 0; }
+  .lang-flags { flex: 0 0 auto; gap: 2px; }
+  .lang-flag { width: 24px; height: 26px; font-size: 14px; border-radius: 4px; }
+}
+
+/* Sélecteur de langue (footer uniquement désormais) */
 .lang-select {
   appearance: none; -webkit-appearance: none;
   background: #fff url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'><path fill='%23555' d='M0 0l5 6 5-6z'/></svg>") no-repeat right 10px center;
@@ -66,37 +108,7 @@ a { color: inherit; }
 }
 .lang-select:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
 
-/* Sélecteur de langue dans la navigation */
-.nav-lang { flex: 0 0 auto; display: flex; align-items: center; }
-.nav-lang .lang-select { font-size: 12px; padding: 5px 26px 5px 8px; }
-@media (max-width: 899.98px) {
-  .nav-lang { padding: 12px 24px; border-top: 1px solid var(--border); }
-  .nav-lang .lang-select { width: 100%; }
-}
-
-/* Bouton recherche */
-.search-toggle {
-  display: inline-flex; align-items: center; justify-content: center;
-  width: 30px; height: 30px; border: none; border-radius: 50%;
-  background: #2c2c2c; color: #e6e6e6; cursor: pointer; transition: background 0.15s;
-}
-.search-toggle:hover { background: var(--accent); color: #fff; }
-.search-toggle svg { width: 15px; height: 15px; fill: currentColor; }
-
-/* Barre de recherche (révélée) */
-.search-bar { display: none; background: #1c1c1c; border-top: 1px solid #333; }
-.search-bar.is-open { display: block; }
-.search-bar-inner { padding: 12px 16px; }
-.search-bar form { display: flex; gap: 10px; max-width: 680px; margin: 0 auto; }
-.search-bar input[type="search"] {
-  flex: 1; padding: 10px 14px; font: inherit; font-size: 15px;
-  border: 1px solid #3a3a3a; border-radius: 4px; background: #fff; color: #111;
-}
-.search-bar button {
-  padding: 10px 20px; font: inherit; font-size: 14px; font-weight: 700;
-  border: none; border-radius: 4px; background: var(--accent); color: #fff; cursor: pointer;
-}
-.search-bar button:hover { background: var(--accent-dark); }
+/* Bouton recherche (ancien) — supprimé */
 
 /* ============ HEADER (logo centré) ============ */
 
