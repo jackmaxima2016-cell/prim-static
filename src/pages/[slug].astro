@@ -9,7 +9,13 @@ import { getPosts, getPages, getImageMeta, getPostCategories, getPostsByCategory
 import { getSeoForUrl } from '../lib/seo.mjs';
 
 export async function getStaticPaths() {
-  const posts = getPosts().map((post) => ({
+  // Build incrémental : si PUBLISH_ONLY est défini (slugs séparés par des virgules),
+  // ne générer QUE ces articles + toutes les pages statiques. Le reste du site
+  // (articles inchangés) est fusionné depuis le dist précédent par publish-article.mjs.
+  const allPosts = getPosts();
+  const only = (process.env.PUBLISH_ONLY ?? '').split(',').map((s) => s.trim()).filter(Boolean);
+  const posts = only.length ? allPosts.filter((p) => only.includes(p.slug)) : allPosts;
+  const postPaths = posts.map((post) => ({
     params: { slug: post.slug },
     props: { kind: 'post', entry: post },
   }));
@@ -17,7 +23,7 @@ export async function getStaticPaths() {
     params: { slug: page.slug },
     props: { kind: 'page', entry: page },
   }));
-  return [...posts, ...pages];
+  return [...postPaths, ...pages];
 }
 
 const { kind, entry } = Astro.props;
