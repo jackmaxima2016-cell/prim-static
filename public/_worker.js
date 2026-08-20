@@ -3,6 +3,13 @@
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
+    // Redirections 301 (anciens slugs)
+    const REDIRECTS = {
+      '/pigeonetta-depigeonnage-defeutrage/': '/pigeonetta-depigeonnage-defientage/',
+    };
+    if (REDIRECTS[url.pathname]) {
+      return Response.redirect(new URL(REDIRECTS[url.pathname], url.origin), 301);
+    }
     if (url.pathname.startsWith('/wp-content/')) {
       // Décoder l'URL : les noms de fichiers accentués arrivent encodés (%C3%A0),
       // alors que les clés R2 sont stockées décodées (caractères UTF-8 réels).
