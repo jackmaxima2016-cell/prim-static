@@ -94,20 +94,11 @@ gtag('config', '${GA4_ID}', { anonymize_ip: true });`}></script>
     }
   </head>
   <body>
-    <!-- Bandeau supérieur : date + tagline | recherche + drapeaux (toujours visibles) -->
+    <!-- Bandeau supérieur : date + tagline -->
     <div class="topbar">
       <div class="container topbar-inner">
         <span class="topbar-date">{today}</span>
         <span class="topbar-tagline">L'actualités au quotidien en PRIM</span>
-        <div class="topbar-right">
-          <form class="topbar-search" action="/" method="get" role="search">
-            <input type="search" name="s" id="search-input" placeholder="Rechercher…" aria-label="Rechercher" />
-            <button type="submit" aria-label="Rechercher">
-              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 2a8 8 0 1 0 4.9 14.3L20 21l1-1-5-5.1A8 8 0 0 0 10 2zm0 2a6 6 0 1 1 0 12 6 6 0 0 1 0-12z"/></svg>
-            </button>
-          </form>
-          <LanguageFlags />
-        </div>
       </div>
     </div>
 
@@ -123,25 +114,59 @@ gtag('config', '${GA4_ID}', { anonymize_ip: true });`}></script>
       </div>
     </header>
 
-    <nav class="header-nav" id="nav-menu" aria-label="Rubriques">
-      <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="nav-menu" aria-label="Ouvrir le menu">
-        <span class="nav-toggle-bar"></span>
-        <span class="nav-toggle-bar"></span>
-        <span class="nav-toggle-bar"></span>
-      </button>
-      <div class="container nav-inner">
-        <a href="/">Accueil</a>
-        <div class="nav-drop">
-          <button class="nav-drop-btn" type="button" aria-expanded="false" aria-haspopup="true">
-            Rubriques <span class="nav-drop-caret" aria-hidden="true">▾</span>
-          </button>
-          <div class="nav-drop-menu" role="menu">
-            {topCats.map((c) => (
-              <a role="menuitem" href={`/#rubrique-${c.slug}`}>{decodeEntities(c.name)}</a>
-            ))}
+    <!-- Barre de contrôle : recherche (gauche) | menu (milieu) | langue (droite) -->
+    <nav class="header-nav" id="header-nav" aria-label="Navigation">
+      <div class="container nav-bar">
+        <button class="icon-btn nav-search-btn" id="search-toggle" type="button" aria-expanded="false" aria-controls="search-panel" aria-label="Rechercher">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 2a8 8 0 1 0 4.9 14.3L20 21l1-1-5-5.1A8 8 0 0 0 10 2zm0 2a6 6 0 1 1 0 12 6 6 0 0 1 0-12z"/></svg>
+        </button>
+
+        <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="menu-panel" aria-label="Ouvrir le menu">
+          <span class="nav-toggle-bar"></span>
+          <span class="nav-toggle-bar"></span>
+          <span class="nav-toggle-bar"></span>
+        </button>
+
+        <button class="icon-btn nav-lang-btn" id="lang-toggle" type="button" aria-expanded="false" aria-controls="lang-panel" aria-label="Choisir la langue">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm7.9 8H16a15.9 15.9 0 0 0-1.7-6.5A8 8 0 0 1 19.9 10zM12 4.1c1.4 1.5 2.4 3.4 2.9 5.9H9.1c.5-2.5 1.5-4.4 2.9-5.9zM4.1 10A8 8 0 0 1 9.7 3.5 15.9 15.9 0 0 0 8 10H4.1zm0 4H8a15.9 15.9 0 0 0 1.7 6.5A8 8 0 0 1 4.1 14zm7.9 5.9c-1.4-1.5-2.4-3.4-2.9-5.9h5.8c-.5 2.5-1.5 4.4-2.9 5.9zm2.3-.9A15.9 15.9 0 0 0 16 14h3.9a8 8 0 0 1-5.6 6.5z"/></svg>
+        </button>
+      </div>
+
+      <!-- Panneau recherche -->
+      <div class="nav-panel" id="search-panel" hidden>
+        <div class="container">
+          <form class="search-form" action="/" method="get" role="search">
+            <input type="search" name="s" id="search-input" placeholder="Rechercher…" aria-label="Rechercher" />
+            <button type="submit" aria-label="Rechercher">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 2a8 8 0 1 0 4.9 14.3L20 21l1-1-5-5.1A8 8 0 0 0 10 2zm0 2a6 6 0 1 1 0 12 6 6 0 0 1 0-12z"/></svg>
+            </button>
+          </form>
+        </div>
+      </div>
+
+      <!-- Panneau langue (drapeaux) -->
+      <div class="nav-panel lang-panel" id="lang-panel" hidden>
+        <div class="container lang-panel-inner">
+          <LanguageFlags />
+        </div>
+      </div>
+
+      <!-- Menu -->
+      <div class="nav-panel menu-panel" id="menu-panel" hidden>
+        <div class="container nav-inner">
+          <a href="/">Accueil</a>
+          <a href="/contact/">Contact</a>
+          <div class="nav-drop">
+            <button class="nav-drop-btn" type="button" aria-expanded="false" aria-haspopup="true">
+              Rubriques <span class="nav-drop-caret" aria-hidden="true">▾</span>
+            </button>
+            <div class="nav-drop-menu" role="menu">
+              {topCats.map((c) => (
+                <a role="menuitem" href={`/#rubrique-${c.slug}`}>{decodeEntities(c.name)}</a>
+              ))}
+            </div>
           </div>
         </div>
-        <a href="/contact/">Contact</a>
       </div>
     </nav>
 
@@ -248,23 +273,43 @@ gtag('config', '${GA4_ID}', { anonymize_ip: true });`}></script>
     }
 
     <script>
-      // Menu burger mobile
-      const navToggle = document.querySelector('.nav-toggle');
-      const navMenu = document.getElementById('nav-menu');
-      if (navToggle && navMenu) {
-        const close = () => {
-          navMenu.classList.remove('is-open');
-          navToggle.setAttribute('aria-expanded', 'false');
-        };
-        navToggle.addEventListener('click', () => {
-          const open = navMenu.classList.toggle('is-open');
-          navToggle.setAttribute('aria-expanded', String(open));
+      // Barre de contrôle : trois boutons → trois panneaux (un seul ouvert à la fois)
+      const headerNav = document.getElementById('header-nav');
+      const panels = {
+        search: { btn: document.getElementById('search-toggle'), panel: document.getElementById('search-panel') },
+        menu:   { btn: document.querySelector('.nav-toggle'), panel: document.getElementById('menu-panel') },
+        lang:   { btn: document.getElementById('lang-toggle'), panel: document.getElementById('lang-panel') },
+      };
+      const closePanels = () => {
+        Object.values(panels).forEach(({ btn, panel }) => {
+          if (btn) btn.setAttribute('aria-expanded', 'false');
+          if (panel) panel.hidden = true;
         });
-        navMenu.querySelectorAll('a').forEach((a) => a.addEventListener('click', close));
-        document.addEventListener('keydown', (e) => { if (e.key === 'Escape') close(); });
+      };
+      const openPanel = (key) => {
+        const { btn, panel } = panels[key];
+        if (!btn || !panel) return;
+        const willOpen = panel.hidden;
+        closePanels();
+        if (willOpen) {
+          panel.hidden = false;
+          btn.setAttribute('aria-expanded', 'true');
+        }
+      };
+      Object.entries(panels).forEach(([key, { btn }]) => {
+        if (btn) btn.addEventListener('click', () => openPanel(key));
+      });
+      document.addEventListener('click', (e) => {
+        if (headerNav && !headerNav.contains(e.target)) closePanels();
+      });
+      document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closePanels(); });
+      // Fermer le menu quand on clique un lien du panneau menu
+      const menuPanel = panels.menu.panel;
+      if (menuPanel) {
+        menuPanel.querySelectorAll('a').forEach((a) => a.addEventListener('click', closePanels));
       }
 
-      // Menu déroulant « Rubriques »
+      // Sous-menu « Rubriques »
       const navDrop = document.querySelector('.nav-drop');
       const navDropBtn = document.querySelector('.nav-drop-btn');
       if (navDrop && navDropBtn) {
@@ -276,8 +321,6 @@ gtag('config', '${GA4_ID}', { anonymize_ip: true });`}></script>
           e.stopPropagation();
           setDrop(!navDrop.classList.contains('is-open'));
         });
-        document.addEventListener('click', (e) => { if (!navDrop.contains(e.target)) setDrop(false); });
-        document.addEventListener('keydown', (e) => { if (e.key === 'Escape') setDrop(false); });
       }
 
       // Sélecteur de langue (drapeaux + select) + recherche client.
@@ -331,7 +374,10 @@ gtag('config', '${GA4_ID}', { anonymize_ip: true });`}></script>
         setLang(code);
       };
       langFlags.forEach((b) => {
-        b.addEventListener('click', () => setLang(b.getAttribute('data-lang')));
+        b.addEventListener('click', () => {
+          setLang(b.getAttribute('data-lang'));
+          closePanels();
+        });
       });
       langSelects.forEach((sel) => {
         sel.addEventListener('change', () => setLang(sel.value));
