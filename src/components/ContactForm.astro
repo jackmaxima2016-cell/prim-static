@@ -77,6 +77,18 @@ const stepTitles = ['Choisissez votre pack', 'Durée & options', 'Vos informatio
         </div>
       </div>
 
+      <!-- Récapitulatif en direct (sticky — toujours visible, pas besoin de scroller) -->
+      <div class="order-summary" id="order-summary" aria-live="polite">
+        <div class="summary-body">
+          <span class="summary-label">Votre sélection</span>
+          <ul class="summary-items" id="summary-items"></ul>
+        </div>
+        <div class="summary-total">
+          <span class="summary-total-label">Total</span>
+          <strong id="summary-total">—</strong>
+        </div>
+      </div>
+
       <!-- Étape 1 : pack -->
       <section class="step-panel" data-panel="1" aria-labelledby="step1-title">
         <h3 class="form-section" id="step1-title">1. Choisissez votre pack</h3>
@@ -275,6 +287,40 @@ const stepTitles = ['Choisissez votre pack', 'Durée & options', 'Vos informatio
   .progress-track { height: 6px; border-radius: 99px; background: #dcdcdc; overflow: hidden; }
   .progress-fill { display: block; height: 100%; width: 25%; border-radius: 99px; background: var(--accent); transition: width 0.3s ease; }
 
+  /* ---- Récapitulatif en direct (sticky) ---- */
+  .order-summary {
+    position: sticky; top: 68px; z-index: 40;
+    display: flex; align-items: center; justify-content: space-between; gap: 12px;
+    margin: 0 0 18px; padding: 12px 16px;
+    background: #111; color: #fff; border-radius: 10px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
+  }
+  .summary-body { min-width: 0; flex: 1 1 auto; }
+  .summary-label {
+    display: block; font-size: 11px; font-weight: 800; text-transform: uppercase;
+    letter-spacing: 0.08em; color: #9a9a9a; margin-bottom: 6px;
+  }
+  .summary-items { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 5px 8px; }
+  .summary-items li {
+    display: inline-flex; align-items: baseline; gap: 6px;
+    font-size: 12.5px; line-height: 1.35; color: #e6e6e6;
+    background: rgba(255, 255, 255, 0.09); padding: 4px 10px; border-radius: 99px;
+  }
+  .summary-items .summary-empty { background: none; padding: 0; color: #8a8a8a; font-style: italic; }
+  .summary-price { font-weight: 800; color: #fff; white-space: nowrap; }
+  .summary-price s { color: #9a9a9a; font-weight: 500; margin-right: 4px; }
+  .summary-total { flex: 0 0 auto; text-align: right; }
+  .summary-total-label {
+    display: block; font-size: 11px; font-weight: 800; text-transform: uppercase;
+    letter-spacing: 0.08em; color: #9a9a9a; margin-bottom: 2px;
+  }
+  .summary-total strong { font-size: 22px; font-weight: 900; color: #fff; }
+  @media (min-width: 900px) { .order-summary { top: 72px; } }
+  @media (max-width: 639px) {
+    .order-summary { flex-wrap: wrap; }
+    .summary-total { text-align: left; }
+  }
+
   .form-section { font-size: 15px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; margin: 0 0 12px; color: #111; }
   .step-panel { padding: 20px; border: 1px solid #c8c8c8; border-radius: 10px; background: #fff; }
   .step-panel + .step-panel { margin-top: 0; }
@@ -454,17 +500,61 @@ const stepTitles = ['Choisissez votre pack', 'Durée & options', 'Vos informatio
   let currentStep = 1;
   let turnstileRendered = false;
 
-  /* ---------- Total ---------- */
+  /* ---------- Total + récapitulatif en direct ---------- */
   const totalOldEl = document.getElementById('total-old');
+  const summaryItems = document.getElementById('summary-items');
+  const summaryTotal = document.getElementById('summary-total');
+
+  const getChoiceLabel = (el) => {
+    const wrap = el.closest('label');
+    if (!wrap) return el.value || el.name;
+    const nameEl = wrap.querySelector('.pack-name, .duree-value, .opt-label');
+    return nameEl ? nameEl.textContent.trim() : (el.value || el.name);
+  };
+
   const updateTotal = () => {
     let total = 0;
     let totalOld = 0;
-    pricers.forEach((el) => {
+    const chosen = [];
+
+    // Pack (radio unique)
+    const packEl = form.querySelector('input[name="pack"]:checked');
+    if (packEl) {
+      total += Number(packEl.dataset.price);
+      totalOld += Number(packEl.dataset.old || 0);
+      chosen.push({ label: `Pack ${packEl.value}`, price: Number(packEl.dataset.price), old: Number(packEl.dataset.old || 0) });
+    }
+    // Durée (radio unique)
+    const dureeEl = form.querySelector('input[name="duree"]:checked');
+    if (dureeEl) {
+      const p = Number(dureeEl.dataset.price);
+      total += p;
+      chosen.push({ label: `Durée ${dureeEl.value}`, price: p, old: 0, included: p === 0 });
+    }
+    // Options (cases à cocher multiples)
+    form.querySelectorAll('input[type="checkbox"][data-price]').forEach((el) => {
       if (el.checked) {
         total += Number(el.dataset.price);
         totalOld += Number(el.dataset.old || 0);
+        chosen.push({ label: getChoiceLabel(el), price: Number(el.dataset.price), old: Number(el.dataset.old || 0) });
       }
     });
+
+    // Barre récapitulative sticky
+    if (summaryItems) {
+      if (chosen.length === 0) {
+        summaryItems.innerHTML = '<li class="summary-empty">Aucune sélection pour l\'instant</li>';
+      } else {
+        summaryItems.innerHTML = chosen.map((c) => {
+          const old = (c.old && c.old !== c.price) ? `<s>${c.old} EUR</s> ` : '';
+          const priceTxt = c.included ? 'Inclus' : `${c.price} EUR`;
+          return `<li>${c.label} <span class="summary-price">${old}${priceTxt}</span></li>`;
+        }).join('');
+      }
+    }
+    if (summaryTotal) summaryTotal.textContent = total ? `${total} EUR` : '—';
+
+    // Total du pied de formulaire
     const packChecked = form.querySelector('input[name="pack"]:checked');
     totalEl.textContent = packChecked && total ? `${total} EUR` : '—';
     if (totalOldEl) {
@@ -473,6 +563,15 @@ const stepTitles = ['Choisissez votre pack', 'Durée & options', 'Vos informatio
     }
   };
   pricers.forEach((el) => el.addEventListener('change', () => { updateTotal(); saveState(); }));
+
+  // Auto-avance : dès qu'un pack est choisi (étape 1), passer à l'étape suivante
+  form.querySelectorAll('input[name="pack"]').forEach((radio) => {
+    radio.addEventListener('change', () => {
+      if (radio.checked && currentStep === 1) {
+        setTimeout(() => { if (currentStep === 1) goToStep(2); }, 450);
+      }
+    });
+  });
 
   /* ---------- Champs conditionnels selon les options choisies ---------- */
   const condFields = [...form.querySelectorAll('.cond-field')];
