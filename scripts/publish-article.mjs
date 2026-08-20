@@ -192,7 +192,7 @@ try {
   }
 } catch { /* commit vide ou déjà fait */ }
 
-log(`✅ PUBLIÉ : ${SITE}${slug}/ (id #${newId})`);
+log(`✅ PUBLIÉ : ${SITE}/${slug}/ (id #${newId})`);
 process.exit(0);
 
 // ── helpers ─────────────────────────────────────────────────────
