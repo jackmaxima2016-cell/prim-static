@@ -52,10 +52,6 @@ const stepTitles = ['Choisissez votre pack', 'Durée & options', 'Vos informatio
 ---
 
 <section class="contact-form-wrap">
-  <div class="promo-banner" id="promo-banner">
-    <span class="promo-flag">🔥 Offre de lancement — 46&nbsp;% de réduction</span>
-    <span class="promo-timer">⏳ La promotion se termine dans <strong id="promo-countdown">15:00</strong></span>
-  </div>
     <form id="prospect-form" class="prospect-form" action="/api/checkout" method="POST" novalidate>
       <input type="hidden" name="_subject" value="Nouvelle demande de publication — prim.net" />
       <input type="hidden" name="_template" value="table" />
@@ -77,16 +73,12 @@ const stepTitles = ['Choisissez votre pack', 'Durée & options', 'Vos informatio
         </div>
       </div>
 
-      <!-- Récapitulatif en direct (sticky — toujours visible, pas besoin de scroller) -->
+      <!-- Récapitulatif en direct (sticky, compact — compte à rebours intégré) -->
       <div class="order-summary" id="order-summary" aria-live="polite">
-        <div class="summary-body">
-          <span class="summary-label">Votre sélection</span>
-          <ul class="summary-items" id="summary-items"></ul>
-        </div>
-        <div class="summary-total">
-          <span class="summary-total-label">Total</span>
-          <strong id="summary-total">—</strong>
-        </div>
+        <span class="summary-promo">🔥 −46&nbsp;%</span>
+        <span class="summary-timer">⏳ <strong id="summary-countdown">15:00</strong></span>
+        <span class="summary-items" id="summary-items"></span>
+        <span class="summary-total">Total&nbsp;: <strong id="summary-total">0&nbsp;€</strong></span>
       </div>
 
       <!-- Étape 1 : pack -->
@@ -99,8 +91,8 @@ const stepTitles = ['Choisissez votre pack', 'Durée & options', 'Vos informatio
               {p.popular && <span class="pack-popular">Le plus choisi</span>}
               <span class="pack-head">
                 <span class="pack-name">{p.name}</span>
-                <span class="pack-price">{p.price}&nbsp;EUR</span>
-                <span class="pack-old">{p.old}&nbsp;EUR</span>
+                <span class="pack-price">{p.price}&nbsp;€</span>
+                <span class="pack-old">{p.old}&nbsp;€</span>
               </span>
               <span class="pack-tagline">{p.tagline}</span>
               <span class="pack-feats">
@@ -119,9 +111,9 @@ const stepTitles = ['Choisissez votre pack', 'Durée & options', 'Vos informatio
         <div class="duree-grid">
           {durees.map((d) => (
             <label class:list={['duree-card', { 'is-rec': d.recommended }]}>
-              <input type="radio" name="duree" value={d.value} data-price={d.price} checked={d.recommended} />
+              <input type="radio" name="duree" value={d.value} data-price={d.price} checked={d.id === 'd1'} />
               <span class="duree-value">{d.value}</span>
-              <span class="duree-price">{d.price ? `+${d.price} EUR` : 'Inclus'}</span>
+              <span class="duree-price">{d.price ? `+${d.price} €` : 'Inclus'}</span>
               <span class="duree-note">{d.note}</span>
               {d.recommended && <span class="duree-rec">Recommandé</span>}
             </label>
@@ -140,7 +132,7 @@ const stepTitles = ['Choisissez votre pack', 'Durée & options', 'Vos informatio
                   <span class="opt-note">{o.note}</span>
                 </span>
               </span>
-              <span class="opt-price"><s class="opt-old">{o.old} EUR</s> +{o.price} EUR</span>
+              <span class="opt-price"><s class="opt-old">{o.old} €</s> +{o.price} €</span>
             </label>
           ))}
         </div>
@@ -232,11 +224,6 @@ const stepTitles = ['Choisissez votre pack', 'Durée & options', 'Vos informatio
       </div>
     </form>
 
-    <div class="promo-banner promo-banner-2" id="promo-banner-2">
-      <span class="promo-flag">🔥 Offre de lancement — 46&nbsp;% de réduction</span>
-      <span class="promo-timer">⏳ La promotion se termine dans <strong id="promo-countdown-2">15:00</strong></span>
-    </div>
-
     <ul class="trust-badges" aria-label="Réassurance">
       <li><strong>🔒 Paiement sécurisé</strong><span>Stripe — carte bancaire</span></li>
       <li><strong>⚡ Confirmation immédiate</strong><span>reçu après paiement</span></li>
@@ -287,38 +274,37 @@ const stepTitles = ['Choisissez votre pack', 'Durée & options', 'Vos informatio
   .progress-track { height: 6px; border-radius: 99px; background: #dcdcdc; overflow: hidden; }
   .progress-fill { display: block; height: 100%; width: 25%; border-radius: 99px; background: var(--accent); transition: width 0.3s ease; }
 
-  /* ---- Récapitulatif en direct (sticky) ---- */
+  /* ---- Récapitulatif en direct (sticky, compact, sur une ligne) ---- */
   .order-summary {
     position: sticky; top: 68px; z-index: 40;
-    display: flex; align-items: center; justify-content: space-between; gap: 12px;
-    margin: 0 0 18px; padding: 12px 16px;
-    background: #111; color: #fff; border-radius: 10px;
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
+    display: flex; align-items: center; gap: 10px;
+    margin: 0 0 14px; padding: 7px 14px;
+    background: #111; color: #fff; border-radius: 8px;
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.18);
+    font-size: 13px; line-height: 1.35;
+    white-space: nowrap;
   }
-  .summary-body { min-width: 0; flex: 1 1 auto; }
-  .summary-label {
-    display: block; font-size: 11px; font-weight: 800; text-transform: uppercase;
-    letter-spacing: 0.08em; color: #9a9a9a; margin-bottom: 6px;
+  .summary-promo { flex: 0 0 auto; font-weight: 800; color: #ffd0d0; }
+  .summary-timer { flex: 0 0 auto; color: #cfcfcf; }
+  .summary-timer strong {
+    display: inline-block; background: #b30000; color: #fff; border-radius: 4px;
+    padding: 0 7px; margin-left: 4px; font-variant-numeric: tabular-nums; font-size: 12.5px;
   }
-  .summary-items { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 5px 8px; }
-  .summary-items li {
-    display: inline-flex; align-items: baseline; gap: 6px;
-    font-size: 12.5px; line-height: 1.35; color: #e6e6e6;
-    background: rgba(255, 255, 255, 0.09); padding: 4px 10px; border-radius: 99px;
+  .summary-items {
+    display: flex; align-items: center; gap: 0;
+    flex: 1 1 auto; min-width: 0; overflow: hidden;
   }
-  .summary-items .summary-empty { background: none; padding: 0; color: #8a8a8a; font-style: italic; }
-  .summary-price { font-weight: 800; color: #fff; white-space: nowrap; }
-  .summary-price s { color: #9a9a9a; font-weight: 500; margin-right: 4px; }
-  .summary-total { flex: 0 0 auto; text-align: right; }
-  .summary-total-label {
-    display: block; font-size: 11px; font-weight: 800; text-transform: uppercase;
-    letter-spacing: 0.08em; color: #9a9a9a; margin-bottom: 2px;
-  }
-  .summary-total strong { font-size: 22px; font-weight: 900; color: #fff; }
+  .summary-chip { white-space: nowrap; color: #e6e6e6; }
+  .summary-sep { white-space: nowrap; color: #6a6a6a; margin: 0 6px; }
+  .summary-chip b { color: #fff; font-weight: 800; }
+  .summary-empty { color: #8a8a8a; font-style: italic; white-space: nowrap; }
+  .summary-total { flex: 0 0 auto; font-size: 13px; color: #cfcfcf; white-space: nowrap; }
+  .summary-total strong { font-size: 16px; font-weight: 900; color: #fff; margin-left: 4px; }
   @media (min-width: 900px) { .order-summary { top: 72px; } }
+  /* Mobile : autoriser le retour à la ligne (largeur limitée) mais rester compact */
   @media (max-width: 639px) {
-    .order-summary { flex-wrap: wrap; }
-    .summary-total { text-align: left; }
+    .order-summary { flex-wrap: wrap; white-space: normal; gap: 6px 10px; padding: 8px 12px; }
+    .summary-items { order: 3; width: 100%; flex-wrap: wrap; }
   }
 
   .form-section { font-size: 15px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; margin: 0 0 12px; color: #111; }
@@ -444,22 +430,6 @@ const stepTitles = ['Choisissez votre pack', 'Durée & options', 'Vos informatio
   .form-success p { font-size: 15px; line-height: 1.6; }
   .form-success-back { margin-top: 16px; }
 
-  /* ---- Bandeau promotion + compte à rebours ---- */
-  .promo-banner {
-    display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 16px;
-    background: linear-gradient(90deg, #8e0000, #b30000);
-    color: #fff; border-radius: 8px; padding: 12px 18px; margin: 0 0 18px;
-    font-size: 15px; line-height: 1.4;
-  }
-  .promo-banner-2 { margin: 18px 0 14px; }
-  .promo-flag { font-weight: 800; letter-spacing: 0.2px; }
-  .promo-timer { font-weight: 600; }
-  .promo-timer strong {
-    display: inline-block; background: #fff; color: #b30000; border-radius: 6px;
-    padding: 2px 10px; margin-left: 6px; font-variant-numeric: tabular-nums;
-    font-size: 17px; letter-spacing: 1px;
-  }
-
   /* ---- Prix barrés ---- */
   .pack-old { display: block; color: #6b6b6b; text-decoration: line-through; font-size: 14px; font-weight: 500; margin-top: 2px; }
   .opt-old { color: #6b6b6b; text-decoration: line-through; font-size: 13px; font-weight: 500; margin-right: 6px; }
@@ -499,6 +469,7 @@ const stepTitles = ['Choisissez votre pack', 'Durée & options', 'Vos informatio
 
   let currentStep = 1;
   let turnstileRendered = false;
+  let initialized = false;
 
   /* ---------- Total + récapitulatif en direct ---------- */
   const totalOldEl = document.getElementById('total-old');
@@ -524,12 +495,12 @@ const stepTitles = ['Choisissez votre pack', 'Durée & options', 'Vos informatio
       totalOld += Number(packEl.dataset.old || 0);
       chosen.push({ label: `Pack ${packEl.value}`, price: Number(packEl.dataset.price), old: Number(packEl.dataset.old || 0) });
     }
-    // Durée (radio unique)
+    // Durée (radio unique) — affichée dans le récap seulement si payante
     const dureeEl = form.querySelector('input[name="duree"]:checked');
     if (dureeEl) {
       const p = Number(dureeEl.dataset.price);
       total += p;
-      chosen.push({ label: `Durée ${dureeEl.value}`, price: p, old: 0, included: p === 0 });
+      if (p > 0) chosen.push({ label: `Durée ${dureeEl.value}`, price: p, old: 0 });
     }
     // Options (cases à cocher multiples)
     form.querySelectorAll('input[type="checkbox"][data-price]').forEach((el) => {
@@ -540,25 +511,23 @@ const stepTitles = ['Choisissez votre pack', 'Durée & options', 'Vos informatio
       }
     });
 
-    // Barre récapitulative sticky
+    // Barre récapitulative sticky (compacte, une ligne)
     if (summaryItems) {
       if (chosen.length === 0) {
-        summaryItems.innerHTML = '<li class="summary-empty">Aucune sélection pour l\'instant</li>';
+        summaryItems.innerHTML = '<span class="summary-empty">Sélectionnez votre pack</span>';
       } else {
-        summaryItems.innerHTML = chosen.map((c) => {
-          const old = (c.old && c.old !== c.price) ? `<s>${c.old} EUR</s> ` : '';
-          const priceTxt = c.included ? 'Inclus' : `${c.price} EUR`;
-          return `<li>${c.label} <span class="summary-price">${old}${priceTxt}</span></li>`;
-        }).join('');
+        summaryItems.innerHTML = chosen.map((c) => (
+          `<span class="summary-chip">${c.label} <b>${c.price} €</b></span>`
+        )).join('<span class="summary-sep"> · </span>');
       }
     }
-    if (summaryTotal) summaryTotal.textContent = total ? `${total} EUR` : '—';
+    if (summaryTotal) summaryTotal.textContent = `${total} €`;
 
     // Total du pied de formulaire
     const packChecked = form.querySelector('input[name="pack"]:checked');
-    totalEl.textContent = packChecked && total ? `${total} EUR` : '—';
+    totalEl.textContent = packChecked && total ? `${total} €` : '—';
     if (totalOldEl) {
-      totalOldEl.textContent = packChecked && totalOld ? `${totalOld} EUR` : '';
+      totalOldEl.textContent = packChecked && totalOld ? `${totalOld} €` : '';
       totalOldEl.hidden = !(packChecked && totalOld);
     }
   };
@@ -628,6 +597,12 @@ const stepTitles = ['Choisissez votre pack', 'Durée & options', 'Vos informatio
     if (n === 4) ensureTurnstile();
     syncCondFields();
     saveState();
+    // Remonter en haut du formulaire pour ne pas perdre le fil
+    // (sinon on reste scrollé en bas, sur les badges de confiance)
+    if (initialized) {
+      const top = form.getBoundingClientRect().top + window.scrollY - 140;
+      window.scrollTo({ top: Math.max(0, top), behavior: 'smooth' });
+    }
   };
 
   const validatePanel = (n) => {
@@ -763,7 +738,7 @@ const stepTitles = ['Choisissez votre pack', 'Durée & options', 'Vos informatio
   /* ---------- Compte à rebours promo (individuel par visiteur) ---------- */
   const PROMO_KEY = 'prim_promo_v1';
   const PROMO_MS = 15 * 60 * 1000;
-  const countdownEls = [...document.querySelectorAll('#promo-countdown, #promo-countdown-2')];
+  const countdownEls = [...document.querySelectorAll('#summary-countdown')];
   const startPromoCountdown = () => {
     let remain = PROMO_MS;
     try {
@@ -798,4 +773,5 @@ const stepTitles = ['Choisissez votre pack', 'Durée & options', 'Vos informatio
   restoreState();
   updateTotal();
   goToStep(currentStep);
+  initialized = true;
 </script>
