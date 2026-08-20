@@ -154,18 +154,18 @@ export const PAGE_SIZE = 12;
 // (ex: actualites-en -> en, noticias-es -> es) ou d'un slug encodé arabe.
 // ============================================================
 export const LANGS = [
-  { code: 'fr', label: 'Français' },
-  { code: 'en', label: 'English' },
-  { code: 'es', label: 'Español' },
-  { code: 'de', label: 'Deutsch' },
-  { code: 'it', label: 'Italiano' },
-  { code: 'pl', label: 'Polski' },
-  { code: 'ar', label: 'العربية' },
-  { code: 'nl', label: 'Nederlands' },
-  { code: 'pt', label: 'Português' },
-  { code: 'tr', label: 'Türkçe' },
-  { code: 'nn', label: 'Norsk' },
-  { code: 'ru', label: 'Русский' },
+  { code: 'fr', label: 'Français', flag: '🇫🇷' },
+  { code: 'en', label: 'English', flag: '🇬🇧' },
+  { code: 'es', label: 'Español', flag: '🇪🇸' },
+  { code: 'de', label: 'Deutsch', flag: '🇩🇪' },
+  { code: 'it', label: 'Italiano', flag: '🇮🇹' },
+  { code: 'pl', label: 'Polski', flag: '🇵🇱' },
+  { code: 'ar', label: 'العربية', flag: '🇸🇦' },
+  { code: 'nl', label: 'Nederlands', flag: '🇳🇱' },
+  { code: 'pt', label: 'Português', flag: '🇵🇹' },
+  { code: 'tr', label: 'Türkçe', flag: '🇹🇷' },
+  { code: 'nn', label: 'Norsk', flag: '🇳🇴' },
+  { code: 'ru', label: 'Русский', flag: '🇷🇺' },
 ];
 
 const _LANG_SUFFIX = /-(en|es|de|it|pl|ar|nl|pt|tr|nn|ru|fr)$/;

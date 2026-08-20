@@ -1,0 +1,16 @@
+---
+// Sélecteur de langue avec drapeaux — réutilisable (header + footer).
+// Les instances sont synchronisées côté client via la classe .lang-select.
+import { LANGS } from '../lib/wp.mjs';
+
+interface Props {
+  id?: string;
+}
+const { id = 'lang-select' } = Astro.props;
+---
+<select class="lang-select" id={id} aria-label="Choisir la langue">
+  <option value="all">🌐 Toutes les langues</option>
+  {LANGS.map((l) => (
+    <option value={l.code}>{l.flag}&nbsp;&nbsp;{l.label}</option>
+  ))}
+</select>
