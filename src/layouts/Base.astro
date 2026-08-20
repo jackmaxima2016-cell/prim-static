@@ -17,6 +17,7 @@ interface Props {
   type?: 'website' | 'article';
   relPrev?: string;
   relNext?: string;
+  preloadImage?: string;
 }
 
 const {
@@ -29,6 +30,7 @@ const {
   type = 'website',
   relPrev,
   relNext,
+  preloadImage,
 } = Astro.props;
 
 // Préversion : NOINDEX=1 au build => toutes les pages en noindex
@@ -74,6 +76,7 @@ const today = new Date().toLocaleDateString('fr-FR', {
     {ogImage && <meta property="og:image" content={ogImage} />}
 
     <link rel="sitemap" href={site + '/sitemap-index.xml'} />
+    {preloadImage && <link rel="preload" as="image" href={preloadImage} fetchpriority="high" />}
     {jsonLd.map((block) => <script type="application/ld+json" set:html={JSON.stringify(block)} />)}
 
     {/* Google Analytics 4 — actif uniquement si PUBLIC_GA4_ID est défini au build */}
@@ -107,7 +110,7 @@ gtag('config', '${GA4_ID}', { anonymize_ip: true });`}></script>
       <div class="header-brand">
         <div class="container header-brand-inner">
           <a class="logo" href="/">
-            <img class="logo-img" src="/prim-logo.png" alt="Prim.net" width="203" height="75" fetchpriority="high" />
+            <img class="logo-img" src="/prim-logo.png" alt="Prim.net" width="203" height="75" fetchpriority="low" />
           </a>
           <p class="header-tagline">L'actualités au quotidien en PRIM</p>
         </div>

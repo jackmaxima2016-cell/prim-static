@@ -58,14 +58,48 @@ export function getFeaturedImage(post) {
 // (le plus récent), pour ne jamais afficher de carte sans visuel.
 const _imageCache = new Map();
 
+// Variantes générées (scripts/gen_image_variants.py) utilisées quand les tailles WP manquent.
+// Le worker R2 (public/_worker.js) a un fallback : si la variante -WxH n'existe pas,
+// il sert l'original → aucune casse possible.
+const VARIANTS = {
+  medium_large: { suffix: '-480x270.jpg', width: 480, height: 270 },
+  large: { suffix: '-1200x675.jpg', width: 1200, height: 675 },
+  medium: { suffix: '-480x270.jpg', width: 480, height: 270 },
+};
+
+function variantOf(media, size) {
+  const src = media?.source_url ?? '';
+  const v = VARIANTS[size];
+  if (!v) return null;
+  // Ne générer une variante que si l'extension est convertible (jpg/png/webp/avif/jpe)
+  const m = src.match(/\.(jpe?g|png|webp|avif|jpe)$/i);
+  if (!m) return null;
+  const base = src.replace(/\.[^.]+$/, '');
+  if (base.endsWith(v.suffix.replace(/\.jpg$/, ''))) return null; // déjà une variante
+  return { src: `${base}${v.suffix}`, width: v.width, height: v.height };
+}
+
 function imageMetaOf(post, size) {
   const media = post._embedded?.['wp:featuredmedia']?.[0];
   const sizes = media?.media_details?.sizes ?? {};
   const pick = sizes[size] ?? sizes.large ?? sizes.full ?? {};
+  if (pick.source_url) {
+    return {
+      src: pick.source_url,
+      width: pick.width ?? sizes.full?.width ?? null,
+      height: pick.height ?? sizes.full?.height ?? null,
+      alt: media?.alt_text ?? '',
+      caption: media?.caption?.rendered ?? '',
+    };
+  }
+  const variant = variantOf(media, size);
+  if (variant) {
+    return { ...variant, alt: media?.alt_text ?? '', caption: media?.caption?.rendered ?? '' };
+  }
   return {
-    src: pick.source_url ?? media?.source_url ?? '',
-    width: pick.width ?? sizes.full?.width ?? null,
-    height: pick.height ?? sizes.full?.height ?? null,
+    src: media?.source_url ?? '',
+    width: null,
+    height: null,
     alt: media?.alt_text ?? '',
     caption: media?.caption?.rendered ?? '',
   };
