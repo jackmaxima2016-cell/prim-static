@@ -4,7 +4,14 @@ export default {
   async fetch(request, env) {
     const url = new URL(request.url);
     if (url.pathname.startsWith('/wp-content/')) {
-      const key = url.pathname.slice(1); // enlève le "/" initial -> wp-content/...
+      // Décoder l'URL : les noms de fichiers accentués arrivent encodés (%C3%A0),
+      // alors que les clés R2 sont stockées décodées (caractères UTF-8 réels).
+      let key;
+      try {
+        key = decodeURIComponent(url.pathname.slice(1));
+      } catch (e) {
+        key = url.pathname.slice(1);
+      }
       let obj = await env.IMAGES.get(key);
       // Fallback : variantes de taille -WxH manquantes -> servir l'original
       if (obj === null) {
