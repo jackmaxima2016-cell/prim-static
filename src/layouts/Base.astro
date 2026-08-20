@@ -128,7 +128,7 @@ gtag('config', '${GA4_ID}', { anonymize_ip: true });`}></script>
         </button>
 
         <button class="icon-btn nav-lang-btn" id="lang-toggle" type="button" aria-expanded="false" aria-controls="lang-panel" aria-label="Choisir la langue">
-          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm7.9 8H16a15.9 15.9 0 0 0-1.7-6.5A8 8 0 0 1 19.9 10zM12 4.1c1.4 1.5 2.4 3.4 2.9 5.9H9.1c.5-2.5 1.5-4.4 2.9-5.9zM4.1 10A8 8 0 0 1 9.7 3.5 15.9 15.9 0 0 0 8 10H4.1zm0 4H8a15.9 15.9 0 0 0 1.7 6.5A8 8 0 0 1 4.1 14zm7.9 5.9c-1.4-1.5-2.4-3.4-2.9-5.9h5.8c-.5 2.5-1.5 4.4-2.9 5.9zm2.3-.9A15.9 15.9 0 0 0 16 14h3.9a8 8 0 0 1-5.6 6.5z"/></svg>
+          <span class="lang-current-flag" id="lang-current-flag" aria-hidden="true">🌐</span>
         </button>
       </div>
 
@@ -327,9 +327,27 @@ gtag('config', '${GA4_ID}', { anonymize_ip: true });`}></script>
       // Filtre les cartes marquées [data-lang] / [data-title] — le HTML complet reste indexé (SEO).
       const langFlags = document.querySelectorAll('.lang-flag');
       const langSelects = document.querySelectorAll('.lang-select');
+      const langCurrentFlag = document.getElementById('lang-current-flag');
       const LANG_KEY = 'prim_lang_v1';
+      const LANG_FLAGS = { fr: '🇫🇷', en: '🇬🇧', es: '🇪🇸', de: '🇩🇪', it: '🇮🇹', pl: '🇵🇱', ar: '🇸🇦', nl: '🇳🇱', pt: '🇵🇹', tr: '🇹🇷', nn: '🇳🇴', ru: '🇷🇺', all: '🌐' };
       let currentLang = 'fr';
       let currentQuery = '';
+
+      // Détecte la langue du navigateur et la ramène à un code supporté.
+      const detectBrowserLang = () => {
+        try {
+          const langs = (navigator.languages && navigator.languages.length)
+            ? navigator.languages
+            : (navigator.language ? [navigator.language] : []);
+          const aliases = { 'no': 'nn', 'nb': 'nn' }; // norvégien
+          for (const raw of langs) {
+            const base = String(raw || '').toLowerCase().split('-')[0];
+            const code = aliases[base] || base;
+            if (Object.prototype.hasOwnProperty.call(LANG_FLAGS, code) && code !== 'all') return code;
+          }
+        } catch (e) {}
+        return 'fr';
+      };
 
       const applyFilters = () => {
         const items = document.querySelectorAll('[data-lang]');
@@ -360,13 +378,15 @@ gtag('config', '${GA4_ID}', { anonymize_ip: true });`}></script>
         currentLang = code;
         try { localStorage.setItem(LANG_KEY, code); } catch (e) {}
         langSelects.forEach((s) => { s.value = code; });
+        if (langCurrentFlag) langCurrentFlag.textContent = LANG_FLAGS[code] || '🌐';
         applyFilters();
       };
       const initFilters = () => {
         let code = 'fr';
         try {
           const params = new URLSearchParams(window.location.search);
-          code = params.get('lang') || localStorage.getItem(LANG_KEY) || 'fr';
+          // Priorité : ?lang= explicite > préférence stockée > langue du navigateur
+          code = params.get('lang') || localStorage.getItem(LANG_KEY) || detectBrowserLang() || 'fr';
           currentQuery = params.get('s') || '';
           const input = document.getElementById('search-input');
           if (input && currentQuery) input.value = currentQuery;

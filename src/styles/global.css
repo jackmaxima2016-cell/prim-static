@@ -108,6 +108,7 @@ a { color: inherit; }
 .icon-btn:hover { background: #f2f2f2; color: var(--accent); }
 .icon-btn[aria-expanded="true"] { background: var(--accent); color: #fff; }
 .icon-btn svg { width: 20px; height: 20px; fill: currentColor; }
+.lang-current-flag { font-size: 20px; line-height: 1; display: inline-block; }
 
 /* Bouton burger (au milieu) */
 .nav-toggle {
@@ -191,6 +192,7 @@ a { color: inherit; }
   .nav-bar { min-height: 60px; }
   .icon-btn, .nav-toggle { width: 48px; height: 48px; }
   .icon-btn svg { width: 22px; height: 22px; }
+  .lang-current-flag { font-size: 22px; }
   .nav-toggle-bar { width: 24px; }
   .nav-panel .container { max-width: 760px; }
   .lang-flag { width: 44px; height: 44px; font-size: 24px; }
