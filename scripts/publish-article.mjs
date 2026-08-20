@@ -62,6 +62,7 @@ const featured = arg('featured', '');
 const date = arg('date', null);
 const doDeploy = !has('no-deploy');
 const doPush = !has('no-push');
+const doUpdate = has('update'); // met à jour un post existant (même slug) au lieu d'en créer un nouveau
 
 if (!title || !slug || !contentFile) die('--title, --slug et --content-file sont requis');
 if (!fs.existsSync(contentFile)) die(`fichier contenu introuvable: ${contentFile}`);
@@ -71,14 +72,16 @@ if (!/^[a-z0-9-]+$/.test(slug)) die(`slug invalide (attendu: a-z0-9-): ${slug}`)
 
 // ── 1. Mise à jour des données ──────────────────────────────────
 const posts = JSON.parse(fs.readFileSync(POSTS_JSON, 'utf-8'));
+const existing = posts.find((p) => p.slug === slug);
+if (doUpdate && !existing) die(`--update : slug introuvable: ${slug}`);
+if (!doUpdate && existing) die(`slug déjà utilisé: ${slug} (ajoutez --update pour remplacer)`);
 const maxId = Math.max(...posts.map((p) => p.id));
-const newId = maxId + 1;
-if (posts.some((p) => p.slug === slug)) die(`slug déjà utilisé: ${slug}`);
+const newId = existing ? existing.id : maxId + 1;
 
 const now = date || new Date().toISOString().replace('T', ' ').slice(0, 19);
 const newPost = {
   id: newId,
-  date: now,
+  date: existing ? existing.date : now,
   slug,
   status: 'publish',
   type: 'post',
@@ -101,10 +104,16 @@ try {
   if (c) newPost._embedded['wp:term'][0][0] = { id: catId, name: c.name, slug: c.slug, taxonomy: 'category' };
 } catch { /* catégorie inconnue → on laisse tel quel */ }
 
-posts.unshift(newPost);
+if (existing) {
+  posts[posts.indexOf(existing)] = newPost;
+  log(`post #${newId} "${slug}" mis à jour (${posts.length} posts)`);
+} else {
+  posts.unshift(newPost);
+  log(`post #${newId} "${slug}" ajouté (${posts.length} posts)`);
+}
 fs.writeFileSync(POSTS_JSON, JSON.stringify(posts, null, 1));
 fs.writeFileSync(POSTS_GZ, zlib.gzipSync(JSON.stringify(posts, null, 1), { level: 9 }));
-log(`post #${newId} "${slug}" ajouté (${posts.length} posts, gz ${(fs.statSync(POSTS_GZ).size / 1e6).toFixed(1)} Mo)`);
+log(`post #${newId} "${slug}" ${existing ? 'mis à jour' : 'ajouté'} (${posts.length} posts, gz ${(fs.statSync(POSTS_GZ).size / 1e6).toFixed(1)} Mo)`);
 
 // Audit SEO : l'URL du nouvel article (title/canonical/h1 vérifiés par le contrat)
 const canonical = `${SITE}/${slug}/`;
