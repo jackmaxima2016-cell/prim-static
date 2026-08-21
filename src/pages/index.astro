@@ -43,6 +43,8 @@ const rubriques = getCategories()
   .filter((r) => r.posts.length > 0);
 
 const heroImg = getImageMeta(hero, 'large');
+// Variante mobile WebP du hero : remplace le suffixe de taille/extension existant
+const heroMobileWebp = heroImg.src ? heroImg.src.replace(/(?:-\d{2,4}x\d{2,4})?\.(jpe?g|png|webp|avif|jpe)$/i, '-800x450.webp') : '';
 const heroCat = getPostCategories(hero)[0];
 const heroAuthor = getPostAuthor(hero);
 const heroLang = getPostLang(hero);
@@ -72,14 +74,23 @@ const jsonLd = [
       <div class="hero-main" data-lang={heroLang}>
         <a href={`/${hero.slug}/`} class="hero-img-wrap">
           {heroImg.src && (
-            <img
-              class="hero-img"
-              src={heroImg.src}
-              alt={heroImg.alt || decodeEntities(hero.title?.rendered ?? '')}
-              width={heroImg.width ?? undefined}
-              height={heroImg.height ?? undefined}
-              fetchpriority="high"
-            />
+            <picture>
+              {heroImg.src && (
+                <source
+                  media="(max-width: 768px)"
+                  srcset={heroMobileWebp}
+                  type="image/webp"
+                />
+              )}
+              <img
+                class="hero-img"
+                src={heroImg.src}
+                alt={heroImg.alt || decodeEntities(hero.title?.rendered ?? '')}
+                width={heroImg.width ?? undefined}
+                height={heroImg.height ?? undefined}
+                fetchpriority="high"
+              />
+            </picture>
           )}
         </a>
         <div class="hero-body">

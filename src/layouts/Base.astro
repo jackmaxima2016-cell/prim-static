@@ -42,6 +42,9 @@ const site = String(Astro.site ?? 'https://prim.net').replace(/\/$/, '');
 const pageUrl = canonical ?? site + '/';
 const ogType = type === 'article' ? 'article' : 'website';
 
+// Preload LCP : WebP mobile + original desktop (variante de taille retirée proprement)
+const preloadMobileWebp = preloadImage ? preloadImage.replace(/(?:-\d{2,4}x\d{2,4})?\.(jpe?g|png|webp|avif|jpe)$/i, '-800x450.webp') : '';
+
 // Rubriques de la navigation : 20 catégories les plus fournies
 const topCats = getCategories()
   .filter((c) => c.count > 0)
@@ -76,7 +79,12 @@ const today = new Date().toLocaleDateString('fr-FR', {
     {ogImage && <meta property="og:image" content={ogImage} />}
 
     <link rel="sitemap" href={site + '/sitemap-index.xml'} />
-    {preloadImage && <link rel="preload" as="image" href={preloadImage} fetchpriority="high" />}
+    {preloadImage && (
+      <>
+        <link rel="preload" as="image" href={preloadMobileWebp} type="image/webp" media="(max-width: 768px)" fetchpriority="high" />
+        <link rel="preload" as="image" href={preloadImage} media="(min-width: 769px)" fetchpriority="high" />
+      </>
+    )}
     {jsonLd.map((block) => <script type="application/ld+json" set:html={JSON.stringify(block)} />)}
 
     {/* Google Analytics 4 — actif uniquement si PUBLIC_GA4_ID est défini au build */}

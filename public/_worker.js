@@ -38,6 +38,14 @@ export default {
       return new Response(obj.body, { headers });
     }
     // Tout le reste : assets statiques du site
-    return env.ASSETS.fetch(request);
+    const res = await env.ASSETS.fetch(request);
+    // Cache les pages HTML au CDN (300s + stale-while-revalidate) → TTFB quasi nul
+    // pour les visiteurs suivants. Les ?cb= cache-bust contournent ce cache.
+    if (res && res.ok && (url.pathname.endsWith('/') || url.pathname.endsWith('.html'))) {
+      const headers = new Headers(res.headers);
+      headers.set('Cache-Control', 'public, max-age=300, stale-while-revalidate=600');
+      return new Response(res.body, { status: res.status, statusText: res.statusText, headers });
+    }
+    return res;
   },
 };
