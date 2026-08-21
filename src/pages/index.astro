@@ -20,7 +20,10 @@ const DESC = homeSeo?.description ?? "L'actualités au quotidien en PRIM";
 // Bloc « À la une » : les 10 articles les plus récents (avec photo) en haut
 const une = posts.slice(0, 10);
 const [hero, ...recents] = une;
-const usedSlugs = new Set(une.map((p) => p.slug));
+// N'exclure des rubriques que les articles réellement affichés (hero + 6 récents) :
+// les posts 8-10 du top 10 restent présents sur la home via leur rubrique (contrat SEO).
+const shown = [hero, ...recents.slice(0, 6)];
+const usedSlugs = new Set(shown.map((p) => p.slug));
 
 // Rubriques : 20 catégories les plus fournies, 10 articles chacune (200 max)
 const rubriques = getCategories()
