@@ -8,7 +8,7 @@ export const GET: APIRoute = ({ site }) => {
   const pages = getPages();
   const total = Math.ceil(posts.length / PAGE_SIZE);
 
-  const urls = ['', '/contact/', '/plan-du-site/', '/mentions-legales/', '/confidentialite/', '/cgv/'];
+  const urls = ['', '/contact/', '/publier-un-article/', '/plan-du-site/', '/mentions-legales/', '/confidentialite/', '/cgv/'];
   for (let i = 2; i <= total; i++) urls.push(`/page/${i}/`);
   for (const p of pages) urls.push(`/${p.slug}/`);
   for (const p of posts) urls.push(`/${p.slug}/`);

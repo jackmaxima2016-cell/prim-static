@@ -1,0 +1,439 @@
+---
+// Formulaire de contact général multistep — page /contact/
+// Étape 1 : sujet (publication sponsorisée → lien vers la page dédiée)
+// Étape 2 : coordonnées · Étape 3 : message + Turnstile
+// Envoi : Pages Function /api/contact (Turnstile vérifié + relais FormSubmit → contact@prim.net)
+import { getCategories, decodeEntities } from '../lib/wp.mjs';
+
+// Site key Turnstile (publique — sans danger dans le code)
+const TURNSTILE_SITE_KEY = '0x4AAAAAAETjkjCYOZ1SXxyR';
+
+const sujets = [
+  { id: 'sponso', value: 'Publication sponsorisée', icon: '📰', note: 'Commander un article sponsorisé sur Prim.net', sponso: true },
+  { id: 'question', value: 'Question', icon: '❓', note: 'Une question sur nos services ou nos articles', sponso: false },
+  { id: 'partenariat', value: 'Partenariat', icon: '🤝', note: 'Proposer un partenariat éditorial ou commercial', sponso: false },
+  { id: 'presse', value: 'Presse', icon: '🎤', note: 'Demande de presse ou interview', sponso: false },
+  { id: 'autre', value: 'Autre', icon: '✉️', note: 'Tout autre sujet', sponso: false },
+];
+
+const rubriques = getCategories()
+  .filter((c) => c.count > 0)
+  .sort((a, b) => b.count - a.count)
+  .slice(0, 9);
+
+const stepTitles = ['Votre demande', 'Vos informations', 'Votre message'];
+---
+
+<section class="gcf-wrap">
+  <form id="general-contact-form" class="gcf-form" action="/api/contact" method="POST" novalidate>
+    <input type="hidden" name="_subject" value="Nouveau message via le formulaire de contact — prim.net" />
+    <input type="hidden" name="_template" value="table" />
+    <!-- Honeypot anti-spam (laissé vide par les humains) -->
+    <input type="text" name="_honey" class="hp-field" tabindex="-1" autocomplete="off" aria-hidden="true" />
+
+    <!-- Progression -->
+    <div class="progress-wrap" role="group" aria-label="Progression du formulaire">
+      <ol class="progress-steps" id="gcf-steps">
+        {stepTitles.map((t, i) => (
+          <li class:list={['progress-step', { 'is-active': i === 0 }]} data-step={i + 1}>
+            <span class="p-num">{i + 1}</span>
+            <span class="p-label">{t}</span>
+          </li>
+        ))}
+      </ol>
+      <div class="progress-track" aria-hidden="true">
+        <span class="progress-fill" id="gcf-fill"></span>
+      </div>
+    </div>
+
+    <!-- Encart : sujet = publication sponsorisée → lien vers la page dédiée -->
+    <div class="sponso-cta" id="sponso-cta" hidden role="region" aria-label="Commander une publication sponsorisée">
+      <p class="sponso-cta-title">📰 Vous souhaitez être publié sur Prim.net ?</p>
+      <p class="sponso-cta-text">
+        La commande d'un article sponsorisé se fait sur notre page dédiée :
+        choix du pack, durée de publication, options et paiement sécurisé en quelques minutes.
+      </p>
+      <a class="btn-publier sponso-cta-btn" href="/publier-un-article/">
+        Commander une publication sponsorisée →
+      </a>
+      <p class="sponso-cta-note">Une question avant de commander ? Continuez ce formulaire, nous vous répondrons sous 24&nbsp;h.</p>
+    </div>
+
+    <!-- Étape 1 : sujet -->
+    <section class="step-panel" data-panel="1" aria-labelledby="gcf-step1-title">
+      <h3 class="form-section" id="gcf-step1-title">1. Quel est le sujet de votre message ?</h3>
+      <div class="gcf-sujets" id="gcf-sujets">
+        {sujets.map((s) => (
+          <label class:list={['gcf-sujet', { 'is-sponso': s.sponso }]}>
+            <input type="radio" name="sujet" value={s.value} data-sponso={s.sponso ? '1' : '0'} required />
+            <span class="gcf-sujet-icon" aria-hidden="true">{s.icon}</span>
+            <span class="gcf-sujet-main">
+              <span class="gcf-sujet-label">{s.value}</span>
+              <span class="gcf-sujet-note">{s.note}</span>
+            </span>
+          </label>
+        ))}
+      </div>
+      <p class="panel-error" id="gcf-sujet-error" hidden>Veuillez choisir un sujet pour continuer.</p>
+    </section>
+
+    <!-- Étape 2 : coordonnées -->
+    <section class="step-panel" data-panel="2" aria-labelledby="gcf-step2-title" hidden>
+      <h3 class="form-section" id="gcf-step2-title">2. Vos informations</h3>
+      <div class="form-row">
+        <div class="form-field">
+          <label for="gcf-nom">Nom complet *</label>
+          <input type="text" id="gcf-nom" name="nom" required autocomplete="name" placeholder="Prénom et nom" />
+        </div>
+        <div class="form-field">
+          <label for="gcf-email">E-mail *</label>
+          <input type="email" id="gcf-email" name="email" required autocomplete="email" placeholder="vous@exemple.com" />
+        </div>
+      </div>
+      <div class="form-field">
+        <label for="gcf-organisation">Organisation / entreprise</label>
+        <input type="text" id="gcf-organisation" name="organisation" autocomplete="organization" placeholder="Optionnel" />
+      </div>
+      {/*
+      <div class="form-field">
+        <label for="gcf-rubrique">Rubrique concernée</label>
+        <select id="gcf-rubrique" name="rubrique">
+          <option value="" selected>Générale (aucune rubrique précise)</option>
+          {rubriques.map((c) => <option>{decodeEntities(c.name)}</option>)}
+        </select>
+      </div>
+      */}
+    </section>
+
+    <!-- Étape 3 : message -->
+    <section class="step-panel" data-panel="3" aria-labelledby="gcf-step3-title" hidden>
+      <h3 class="form-section" id="gcf-step3-title">3. Votre message</h3>
+      <div class="form-field">
+        <label for="gcf-message">Message *</label>
+        <textarea id="gcf-message" name="message" required rows="6" placeholder="Décrivez votre demande…"></textarea>
+      </div>
+      <div class="cf-turnstile" id="gcf-turnstile-slot"></div>
+      <p class="form-status" role="status" aria-live="polite"></p>
+    </section>
+
+    <!-- Pied : navigation -->
+    <div class="form-footer">
+      <div class="form-nav gcf-nav">
+        <button type="button" class="btn-prev" id="gcf-btn-prev" hidden>← Précédent</button>
+        <button type="submit" class="btn-next" id="gcf-btn-next">Continuer →</button>
+      </div>
+    </div>
+  </form>
+
+  <div class="form-success" hidden>
+    <h3>Message envoyé ✅</h3>
+    <p>Merci ! Votre message est bien reçu. Nous vous répondrons sous 24–48&nbsp;h à l'adresse indiquée.</p>
+    <p class="form-success-back"><a href="/">← Retour à l'accueil</a></p>
+  </div>
+</section>
+
+<style>
+  .gcf-wrap { max-width: var(--maxw); margin: 0 auto; }
+
+  /* ---- Progression (réutilise le style du formulaire de commande) ---- */
+  .progress-wrap { margin-bottom: 22px; }
+  .progress-steps { list-style: none; display: flex; gap: 4px; margin: 0 0 10px; padding: 0; min-width: 0; }
+  .progress-step { display: flex; align-items: center; gap: 7px; flex: 1 1 0; min-width: 0; font-size: 12.5px; font-weight: 600; color: #555; cursor: pointer; transition: opacity 0.15s ease; }
+  .progress-step:hover { opacity: 0.8; }
+  .progress-step.is-active { color: #111; font-weight: 800; }
+  .p-num {
+    display: inline-flex; align-items: center; justify-content: center; flex: 0 0 auto;
+    width: 24px; height: 24px; border-radius: 50%; background: #dcdcdc; color: #333;
+    font-size: 12px; font-weight: 800;
+  }
+  .progress-step.is-active .p-num { background: var(--accent); color: #fff; }
+  .progress-step.is-done .p-num { background: #111; color: #fff; }
+  .p-label { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  @media (max-width: 639px) {
+    .p-label { display: none; }
+    .progress-step { justify-content: center; }
+  }
+  .progress-track { height: 6px; border-radius: 99px; background: #dcdcdc; overflow: hidden; }
+  .progress-fill { display: block; height: 100%; width: 33.33%; border-radius: 99px; background: var(--accent); transition: width 0.3s ease; }
+
+  /* ---- Encart publication sponsorisée ---- */
+  .sponso-cta {
+    margin: 0 0 18px; padding: 18px 20px;
+    background: linear-gradient(135deg, #1a1a1a, #3a0d1c);
+    color: #fff; border-radius: 10px; border-left: 4px solid var(--accent);
+  }
+  .sponso-cta-title { font-size: 16px; font-weight: 800; margin: 0 0 6px; }
+  .sponso-cta-text { font-size: 13.5px; line-height: 1.6; color: #ddd; margin: 0 0 12px; }
+  .sponso-cta-btn {
+    display: inline-block; padding: 11px 20px; font-size: 14px; font-weight: 800;
+    color: #fff; background: var(--accent); border-radius: 6px; text-decoration: none;
+    transition: background 0.15s;
+  }
+  .sponso-cta-btn:hover { background: var(--accent-dark); }
+  .sponso-cta-note { font-size: 12.5px; color: #bbb; margin: 10px 0 0; }
+
+  /* ---- Sujets (étape 1) ---- */
+  .gcf-sujets { display: grid; grid-template-columns: 1fr; gap: 10px; }
+  @media (min-width: 640px) { .gcf-sujets { grid-template-columns: 1fr 1fr; } }
+  .gcf-sujet {
+    position: relative; display: flex; align-items: center; gap: 12px; cursor: pointer;
+    padding: 13px 15px; border: 2px solid #858585; border-radius: 8px; background: #fff;
+    transition: border-color 0.15s, box-shadow 0.15s;
+  }
+  .gcf-sujet:hover { border-color: #4a4a4a; }
+  .gcf-sujet:has(input:checked) { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(160, 16, 48, 0.18); }
+  .gcf-sujet:has(input:focus-visible) { outline: 3px solid #0a5fd0; outline-offset: 2px; }
+  .gcf-sujet input { position: absolute; opacity: 0; pointer-events: none; left: 0; top: 0; width: 1px; height: 1px; }
+  .gcf-sujet-icon { font-size: 22px; flex: 0 0 auto; }
+  .gcf-sujet-main { display: flex; flex-direction: column; min-width: 0; }
+  .gcf-sujet-label { font-size: 15px; font-weight: 700; color: #111; }
+  .gcf-sujet-note { font-size: 12.5px; color: #5c5c5c; }
+  .gcf-sujet.is-sponso { border-color: #9a9a9a; background: #fafafa; }
+  .gcf-sujet.is-sponso:has(input:checked) { border-color: var(--accent); background: rgba(160, 16, 48, 0.06); }
+
+  /* ---- Champs ---- */
+  .form-section { font-size: 15px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; margin: 0 0 12px; color: #111; }
+  .step-panel { padding: 20px; border: 1px solid #c8c8c8; border-radius: 10px; background: #fff; }
+  .form-row { display: grid; grid-template-columns: 1fr; gap: 0; }
+  @media (min-width: 640px) { .form-row { grid-template-columns: 1fr 1fr; gap: 16px; } }
+  .form-field { margin-bottom: 16px; }
+  .form-field label { display: block; font-size: 13px; font-weight: 700; margin-bottom: 6px; color: #111; }
+  .gcf-form input:not([type="checkbox"]):not([type="radio"]), .gcf-form select, .gcf-form textarea {
+    width: 100%; padding: 12px 13px; font: inherit; font-size: 15px;
+    border: 1.5px solid #767676; border-radius: 4px; background: #fff; color: #111;
+    transition: border-color 0.15s, box-shadow 0.15s;
+  }
+  .gcf-form input::placeholder, .gcf-form textarea::placeholder { color: #5c5c5c; }
+  .gcf-form input:focus, .gcf-form select:focus, .gcf-form textarea:focus {
+    outline: none; border-color: #0a5fd0; box-shadow: 0 0 0 3px rgba(10, 95, 208, 0.25);
+  }
+  .gcf-form textarea { resize: vertical; }
+  .gcf-form select { appearance: auto; }
+  .hp-field { position: absolute; left: -9999px; opacity: 0; height: 0; width: 0; }
+  .cf-turnstile { margin: 14px 0 4px; }
+  .panel-error { font-size: 13.5px; font-weight: 600; color: #b00020; margin: 12px 0 0; }
+
+  /* ---- Pied ---- */
+  .form-footer { margin-top: 18px; }
+  .gcf-nav { display: flex; gap: 10px; }
+  .btn-prev {
+    padding: 12px 18px; font: inherit; font-size: 15px; font-weight: 700;
+    color: #111; background: #fff; border: 2px solid #111; border-radius: 4px; cursor: pointer;
+    transition: background 0.15s, color 0.15s;
+  }
+  .btn-prev:hover { background: #eee; }
+  .btn-prev:focus-visible, .btn-next:focus-visible { outline: 3px solid #0a5fd0; outline-offset: 2px; }
+  .btn-next {
+    padding: 12px 26px; font: inherit; font-size: 15px; font-weight: 700;
+    color: #fff; background: #111; border: none; border-radius: 4px; cursor: pointer;
+    transition: background 0.15s;
+  }
+  .btn-next:hover { background: var(--accent); }
+  .btn-next[disabled] { opacity: 0.6; cursor: wait; }
+  .form-status { font-size: 14px; margin: 12px 0 0; min-height: 20px; font-weight: 600; }
+  .form-status.is-error { color: #b00020; }
+  .form-status.is-ok { color: #0a6b1d; }
+  .form-success h3 { font-size: 22px; margin: 0 0 10px; }
+  .form-success p { font-size: 15px; line-height: 1.6; }
+  .form-success-back { margin-top: 16px; }
+</style>
+
+<script>
+  const form = document.getElementById('general-contact-form');
+  const panels = [...form.querySelectorAll('.step-panel')];
+  const steps = [...document.querySelectorAll('#gcf-steps .progress-step')];
+  const fill = document.getElementById('gcf-fill');
+  const btnPrev = document.getElementById('gcf-btn-prev');
+  const btnNext = document.getElementById('gcf-btn-next');
+  const status = form.querySelector('.form-status');
+  const success = document.querySelector('.gcf-wrap .form-success');
+  const sujetError = document.getElementById('gcf-sujet-error');
+  const sponsoCta = document.getElementById('sponso-cta');
+  const turnstileSlot = document.getElementById('gcf-turnstile-slot');
+
+  let currentStep = 1;
+  let turnstileRendered = false;
+  let initialized = false;
+
+  // Affichage de l'encart sponsorisé quand le sujet est choisi
+  const sujetRadios = form.querySelectorAll('input[name="sujet"]');
+  const syncSponsoCta = () => {
+    const checked = form.querySelector('input[name="sujet"]:checked');
+    const isSponso = checked && checked.dataset.sponso === '1';
+    sponsoCta.hidden = !isSponso;
+  };
+  sujetRadios.forEach((r) => r.addEventListener('change', () => { syncSponsoCta(); saveState(); }));
+
+  /* ---------- Navigation ---------- */
+  const goToStep = (n) => {
+    currentStep = n;
+    panels.forEach((p, i) => { p.hidden = i !== n - 1; });
+    steps.forEach((s, i) => {
+      s.classList.toggle('is-active', i === n - 1);
+      s.classList.toggle('is-done', i < n - 1);
+    });
+    fill.style.width = `${(n / 3) * 100}%`;
+    btnPrev.hidden = n === 1;
+    btnNext.textContent = n === 3 ? 'Envoyer le message' : 'Continuer →';
+    if (n === 3) ensureTurnstile();
+    saveState();
+    if (initialized) {
+      const top = form.getBoundingClientRect().top + window.scrollY - 140;
+      window.scrollTo({ top: Math.max(0, top), behavior: 'smooth' });
+    }
+  };
+
+  const validatePanel = (n) => {
+    if (n === 1) {
+      const ok = form.querySelector('input[name="sujet"]:checked');
+      sujetError.hidden = !!ok;
+      return !!ok;
+    }
+    const panel = panels[n - 1];
+    const invalids = [...panel.querySelectorAll('input, select, textarea')].filter((el) => !el.checkValidity());
+    if (invalids.length) { invalids[0].reportValidity(); return false; }
+    return true;
+  };
+
+  btnPrev.addEventListener('click', () => { if (currentStep > 1) goToStep(currentStep - 1); });
+
+  // Étapes cliquables (retour possible, avance validée)
+  steps.forEach((s, i) => {
+    s.setAttribute('role', 'button');
+    s.setAttribute('tabindex', '0');
+    s.addEventListener('click', () => {
+      const target = i + 1;
+      if (target === currentStep) return;
+      if (target < currentStep) { goToStep(target); return; }
+      if (validatePanel(currentStep)) goToStep(target);
+    });
+    s.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); s.click(); }
+    });
+  });
+
+  /* ---------- Persistance localStorage (reprise après interruption) ---------- */
+  const STORAGE_KEY = 'prim_contact_v1';
+  const persistables = [...form.querySelectorAll('input, select, textarea')].filter(
+    (el) => el.name && el.name !== '_honey' && el.name !== 'cf-turnstile-response'
+  );
+  const saveState = () => {
+    try {
+      const data = { __step: currentStep };
+      persistables.forEach((el) => {
+        if (el.type === 'radio') { if (el.checked) data[el.name] = el.value; }
+        else data[el.name] = el.value;
+      });
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    } catch (e) {}
+  };
+  const restoreState = () => {
+    let data = null;
+    try { data = JSON.parse(localStorage.getItem(STORAGE_KEY)); } catch (e) { return; }
+    if (!data) return;
+    persistables.forEach((el) => {
+      if (el.type === 'radio') { if (data[el.name] !== undefined) el.checked = data[el.name] === el.value; }
+      else if (data[el.name] !== undefined) el.value = data[el.name];
+    });
+    currentStep = Math.min(3, Math.max(1, parseInt(data.__step, 10) || 1));
+  };
+  persistables.forEach((el) => {
+    el.addEventListener('input', saveState);
+    el.addEventListener('change', saveState);
+  });
+
+  /* ---------- Turnstile (chargé à l'étape 3) ---------- */
+  let turnstileLoading = null;
+  const ensureTurnstile = () => {
+    if (turnstileRendered) return;
+    if (turnstileLoading) return turnstileLoading;
+    turnstileLoading = new Promise((resolve) => {
+      const load = () => {
+        if (window.turnstile) {
+          window.turnstile.render(turnstileSlot, {
+            sitekey: '0x4AAAAAAETjkjCYOZ1SXxyR',
+            theme: 'light',
+            language: 'fr',
+          });
+          turnstileRendered = true;
+          resolve();
+          return;
+        }
+        const s = document.createElement('script');
+        s.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit';
+        s.async = true;
+        s.onload = () => {
+          window.turnstile.render(turnstileSlot, {
+            sitekey: '0x4AAAAAAETjkjCYOZ1SXxyR',
+            theme: 'light',
+            language: 'fr',
+          });
+          turnstileRendered = true;
+          resolve();
+        };
+        s.onerror = () => resolve();
+        document.head.appendChild(s);
+      };
+      setTimeout(load, 50);
+    });
+    return turnstileLoading;
+  };
+
+  /* ---------- Soumission ---------- */
+  const showStatus = (msg, isError) => {
+    status.textContent = msg;
+    status.classList.toggle('is-error', isError);
+    status.classList.toggle('is-ok', !isError && !!msg);
+  };
+
+  form.addEventListener('submit', async (e) => {
+    if (currentStep < 3) {
+      e.preventDefault();
+      if (validatePanel(currentStep)) goToStep(currentStep + 1);
+      return;
+    }
+    e.preventDefault();
+    if (!validatePanel(3)) return;
+    const token = form.querySelector('[name="cf-turnstile-response"]');
+    if (!token || !token.value) {
+      showStatus('Veuillez compléter la vérification anti-robot.', true);
+      return;
+    }
+    showStatus('', false);
+    btnNext.disabled = true;
+    btnNext.textContent = 'Envoi en cours…';
+    try {
+      const payload = {};
+      persistables.forEach((el) => {
+        if (el.type === 'radio') { if (el.checked) payload[el.name] = el.value; }
+        else payload[el.name] = el.value;
+      });
+      payload['cf-turnstile-response'] = token.value;
+      const res = await fetch('/api/contact', {
+        method: 'POST',
+        headers: { Accept: 'application/json', 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (res.ok && data.success === 'true') {
+        try { localStorage.removeItem(STORAGE_KEY); } catch (err) {}
+        form.hidden = true;
+        success.hidden = false;
+      } else {
+        throw new Error(data.message || 'Réponse invalide');
+      }
+    } catch (err) {
+      const msg = err.message || '';
+      if (/anti-robot|vérification/i.test(msg) && window.turnstile) window.turnstile.reset();
+      showStatus(`${msg}`, true);
+      btnNext.disabled = false;
+      btnNext.textContent = 'Envoyer le message';
+    }
+  });
+
+  /* ---------- Init ---------- */
+  restoreState();
+  syncSponsoCta();
+  goToStep(currentStep);
+  initialized = true;
+</script>

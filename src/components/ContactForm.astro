@@ -6,7 +6,7 @@
 import { getCategories, decodeEntities } from '../lib/wp.mjs';
 
 // Site key Turnstile (publique — sans danger dans le code)
-const TURNSTILE_SITE_KEY = 'PRIM_TURNSTILE_SITE_KEY';
+const TURNSTILE_SITE_KEY = '0x4AAAAAAETjkjCYOZ1SXxyR';
 
 const rubriques = getCategories()
   .filter((c) => c.count > 0)
@@ -707,7 +707,7 @@ const stepTitles = ['Choisissez votre pack', 'Durée & options', 'Vos informatio
       const load = () => {
         if (window.turnstile) {
           window.turnstile.render(turnstileSlot, {
-            sitekey: 'PRIM_TURNSTILE_SITE_KEY',
+            sitekey: '0x4AAAAAAETjkjCYOZ1SXxyR',
             theme: 'light',
             language: 'fr',
           });
@@ -720,7 +720,7 @@ const stepTitles = ['Choisissez votre pack', 'Durée & options', 'Vos informatio
         s.async = true;
         s.onload = () => {
           window.turnstile.render(turnstileSlot, {
-            sitekey: 'PRIM_TURNSTILE_SITE_KEY',
+            sitekey: '0x4AAAAAAETjkjCYOZ1SXxyR',
             theme: 'light',
             language: 'fr',
           });

@@ -8,7 +8,7 @@ il sert l'original. Donc aucune casse possible pendant la génération.
 Usage: python3 scripts/gen_image_variants.py [--limit N] [--resume]
 """
 import json, os, sys, io, re, time, threading
-import urllib.request, urllib.parse
+import urllib.request, urllib.parse, urllib.error
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from PIL import Image
 
@@ -23,7 +23,8 @@ LOG_FILE = '/tmp/gen_variants.log'
 
 SIZES = {
     '480x270': (480, 270, 'jpeg', 78),   # cards / recents
-    '1200x675': (1200, 675, 'jpeg', 80), # hero
+    '1200x675': (1200, 675, 'jpeg', 80), # hero desktop
+    '800x450': (800, 450, 'webp', 78),   # hero mobile (décodage rapide)
 }
 
 def log(msg):
@@ -52,15 +53,27 @@ def fetch(url, timeout=45):
     with urllib.request.urlopen(req, timeout=timeout) as r:
         return r.read()
 
-def upload_r2(key, data, ctype='image/jpeg'):
+def upload_r2(key, data, ctype='image/jpeg', retries=4):
     url = (f'https://api.cloudflare.com/client/v4/accounts/{ACCOUNT}/r2/buckets/{BUCKET}/'
            f'objects/{urllib.parse.quote(key, safe="")}')
-    req = urllib.request.Request(url, data=data, method='PUT', headers={
-        'Authorization': f'Bearer {TOKEN}',
-        'Content-Type': ctype,
-    })
-    with urllib.request.urlopen(req, timeout=60) as r:
-        return r.status
+    for attempt in range(retries):
+        try:
+            req = urllib.request.Request(url, data=data, method='PUT', headers={
+                'Authorization': f'Bearer {TOKEN}',
+                'Content-Type': ctype,
+            })
+            with urllib.request.urlopen(req, timeout=60) as r:
+                return r.status
+        except urllib.error.HTTPError as e:
+            if e.code in (429, 403, 500, 502, 503) and attempt < retries - 1:
+                time.sleep(2 * (attempt + 1))
+                continue
+            raise
+        except Exception:
+            if attempt < retries - 1:
+                time.sleep(1.5 * (attempt + 1))
+                continue
+            raise
 
 def r2_exists(key):
     """True si l'objet existe déjà dans le bucket (évite de re-uploader)."""
@@ -73,7 +86,7 @@ def r2_exists(key):
     except Exception:
         return False
 
-def process(src_url):
+def process(src_url, only_webp=False):
     """src_url: '/wp-content/uploads/2026/08/foo.jpg' → génère et upload les variantes."""
     if not src_url or src_url.endswith('.gif'):
         return None
@@ -89,8 +102,10 @@ def process(src_url):
     except Exception as e:
         log(f'  ⚠️ fetch/open {src_url[:80]}: {e}')
         return None
-    for suffix, (w, h, fmt, q) in SIZES.items():
-        key = f'{base}-{suffix}.jpg' if not base.endswith(f'-{suffix}') else f'{base}.jpg'
+    sizes_iter = SIZES.items() if not only_webp else [('800x450', SIZES['800x450'])]
+    for suffix, (w, h, fmt, q) in sizes_iter:
+        ext = 'jpg' if fmt == 'jpeg' else fmt
+        key = f'{base}-{suffix}.{ext}' if not base.endswith(f'-{suffix}') else f'{base}.{ext}'
         rel_key = key.lstrip('/')
         if r2_exists(rel_key):
             continue  # déjà généré (passe de reprise)
@@ -109,9 +124,14 @@ def process(src_url):
                 im2 = im.crop((0, y0, iw, y0 + nh))
             im2 = im2.resize((w, h), Image.LANCZOS)
             buf = io.BytesIO()
-            im2.save(buf, fmt, quality=q, optimize=True)
+            if fmt == 'jpeg':
+                im2.save(buf, fmt, quality=q, optimize=True)
+                ctype = 'image/jpeg'
+            else:
+                im2.save(buf, fmt, quality=q, method=6)
+                ctype = f'image/{fmt}'
             data = buf.getvalue()
-            upload_r2(rel_key, data, 'image/jpeg')
+            upload_r2(rel_key, data, ctype)
             out.append(f'{suffix}:{len(data)}')
         except Exception as e:
             log(f'  ⚠️ variant {suffix} {key[:80]}: {e}')
@@ -122,6 +142,8 @@ def main():
     limit = None
     if '--limit' in args:
         limit = int(args[args.index('--limit') + 1])
+    # Mode reprise WebP : ne vérifie QUE la variante 800x450.webp (les jpg existent déjà)
+    only_webp = '--only-webp' in args
     posts = json.load(open(POSTS_JSON))
     urls = set()
     for p in posts:
@@ -131,11 +153,11 @@ def main():
     urls = sorted(urls)
     if limit:
         urls = urls[:limit]
-    log(f'images uniques à traiter: {len(urls)}')
+    log(f'images uniques à traiter: {len(urls)} (only_webp={only_webp})')
     done, ok = 0, 0
     t0 = time.time()
-    with ThreadPoolExecutor(WORKERS) as ex:
-        futs = {ex.submit(process, u): u for u in urls}
+    with ThreadPoolExecutor(WORKERS if not only_webp else 6) as ex:
+        futs = {ex.submit(process, u, only_webp): u for u in urls}
         for fut in as_completed(futs):
             done += 1
             res = fut.result()

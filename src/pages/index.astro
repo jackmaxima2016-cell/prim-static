@@ -94,7 +94,10 @@ const jsonLd = [
           )}
         </a>
         <div class="hero-body">
-          <p class="hero-label">À la une</p>
+          <div class="hero-label-row">
+            <p class="hero-label">À la une</p>
+            <a class="btn-publier hero-publier" href="/publier-un-article/">Être publié →</a>
+          </div>
           {heroCat && <span class="badge">{heroCat.name}</span>}
           <h2 class="hero-title"><a href={`/${hero.slug}/`}>{decodeEntities(hero.title?.rendered ?? '')}</a></h2>
           {heroExcerpt && <p class="hero-excerpt">{heroExcerpt}</p>}

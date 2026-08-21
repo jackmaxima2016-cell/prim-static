@@ -200,7 +200,7 @@ a { color: inherit; }
 
 /* ============ MAIN ============ */
 
-main { padding: 24px 0 64px; }
+main { padding: 30px 0 64px; }
 
 /* ============ HERO (article principal + récents avec photo) ============ */
 
@@ -210,6 +210,20 @@ main { padding: 24px 0 64px; }
 .hero-main .hero-img-wrap { position: relative; display: block; }
 .hero-main .hero-img {
   width: 100%; aspect-ratio: 16 / 9; object-fit: cover; background: var(--border);
+}
+
+/* Ligne « À la une » + bouton « Être publié » */
+.hero-label-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 6px; }
+.hero-label-row .hero-label { margin-bottom: 0; }
+.btn-publier {
+  display: inline-block; padding: 8px 14px; font-size: 12.5px; font-weight: 800;
+  color: #fff; background: var(--accent); border-radius: 99px; text-decoration: none;
+  white-space: nowrap; transition: background 0.15s;
+}
+.btn-publier:hover { background: var(--accent-dark); }
+.hero-publier { flex: 0 0 auto; }
+@media (max-width: 479px) {
+  .hero-publier { padding: 7px 12px; font-size: 11.5px; }
 }
 .hero-main .hero-body {
   position: relative; padding: 16px 4px 0;
@@ -496,7 +510,12 @@ main { padding: 24px 0 64px; }
   .rubric-grid { grid-template-columns: repeat(3, 1fr); }
   .post-grid { grid-template-columns: repeat(2, 1fr); gap: 32px 28px; }
   .footer-grid { grid-template-columns: 2fr 1fr 1fr 1fr; }
-  main { padding-top: 28px; }
+  main { padding-top: 30px; }
+}
+
+/* Mobile : hero compact pour voir la section en entier sous le menu burger */
+@media (max-width: 639px) {
+  .hero-main .hero-img { max-height: 34vh; }
 }
 
 @media (min-width: 1200px) {
