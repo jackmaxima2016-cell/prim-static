@@ -43,8 +43,6 @@ const rubriques = getCategories()
   .filter((r) => r.posts.length > 0);
 
 const heroImg = getImageMeta(hero, 'large');
-// Variante mobile WebP du hero : remplace le suffixe de taille/extension existant
-const heroMobileWebp = heroImg.src ? heroImg.src.replace(/(?:-\d{2,4}x\d{2,4})?\.(jpe?g|png|webp|avif|jpe)$/i, '-800x450.webp') : '';
 const heroCat = getPostCategories(hero)[0];
 const heroAuthor = getPostAuthor(hero);
 const heroLang = getPostLang(hero);
@@ -74,30 +72,18 @@ const jsonLd = [
       <div class="hero-main" data-lang={heroLang}>
         <a href={`/${hero.slug}/`} class="hero-img-wrap">
           {heroImg.src && (
-            <picture>
-              {heroImg.src && (
-                <source
-                  media="(max-width: 768px)"
-                  srcset={heroMobileWebp}
-                  type="image/webp"
-                />
-              )}
-              <img
-                class="hero-img"
-                src={heroImg.src}
-                alt={heroImg.alt || decodeEntities(hero.title?.rendered ?? '')}
-                width={heroImg.width ?? undefined}
-                height={heroImg.height ?? undefined}
-                fetchpriority="high"
-              />
-            </picture>
+            <img
+              class="hero-img"
+              src={heroImg.src}
+              alt={heroImg.alt || decodeEntities(hero.title?.rendered ?? '')}
+              width={heroImg.width ?? undefined}
+              height={heroImg.height ?? undefined}
+              fetchpriority="high"
+            />
           )}
         </a>
         <div class="hero-body">
-          <div class="hero-label-row">
-            <p class="hero-label">À la une</p>
-            <a class="btn-publier hero-publier" href="/publier-un-article/">Être publié →</a>
-          </div>
+          <p class="hero-label">À la une</p>
           {heroCat && <span class="badge">{heroCat.name}</span>}
           <h2 class="hero-title"><a href={`/${hero.slug}/`}>{decodeEntities(hero.title?.rendered ?? '')}</a></h2>
           {heroExcerpt && <p class="hero-excerpt">{heroExcerpt}</p>}
@@ -112,7 +98,7 @@ const jsonLd = [
       </div>
 
       <div class="hero-recents">
-        {recents.map((p) => (
+        {recents.slice(0, 6).map((p) => (
           <article class="recent-item" data-lang={getPostLang(p)}>
             <a href={`/${p.slug}/`} tabindex="-1" aria-hidden="true">
               {getImageMeta(p, 'medium_large').src && (

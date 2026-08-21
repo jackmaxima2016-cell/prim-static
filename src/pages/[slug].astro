@@ -114,13 +114,6 @@ const jsonLd = kind === 'post'
 <Base title={title} description={description} canonical={canonical} ogImage={img.src || undefined} jsonLd={jsonLd} type={kind === 'post' ? 'article' : 'website'}>
   <div class="layout-ws">
   <article class="entry">
-    <nav class="breadcrumb" aria-label="Fil d'Ariane">
-      <a href="/">Accueil</a>
-      <span aria-hidden="true">›</span>
-      {cat && (<><a href={`/#rubrique-${cat.slug}`}>{cat.name}</a><span aria-hidden="true">›</span></>)}
-      <span class="crumb-current">{decodeEntities(entry.title?.rendered ?? '')}</span>
-    </nav>
-
     <header class="entry-header">
       {kind === 'post' && cat && <span class="badge">{cat.name}</span>}
       <h1 class="entry-title" set:html={entry.title?.rendered ?? ''} />

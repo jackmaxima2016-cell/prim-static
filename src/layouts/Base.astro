@@ -42,9 +42,6 @@ const site = String(Astro.site ?? 'https://prim.net').replace(/\/$/, '');
 const pageUrl = canonical ?? site + '/';
 const ogType = type === 'article' ? 'article' : 'website';
 
-// Preload LCP : WebP mobile + original desktop (variante de taille retirée proprement)
-const preloadMobileWebp = preloadImage ? preloadImage.replace(/(?:-\d{2,4}x\d{2,4})?\.(jpe?g|png|webp|avif|jpe)$/i, '-800x450.webp') : '';
-
 // Rubriques de la navigation : 20 catégories les plus fournies
 const topCats = getCategories()
   .filter((c) => c.count > 0)
@@ -80,10 +77,7 @@ const today = new Date().toLocaleDateString('fr-FR', {
 
     <link rel="sitemap" href={site + '/sitemap-index.xml'} />
     {preloadImage && (
-      <>
-        <link rel="preload" as="image" href={preloadMobileWebp} type="image/webp" media="(max-width: 768px)" fetchpriority="high" />
-        <link rel="preload" as="image" href={preloadImage} media="(min-width: 769px)" fetchpriority="high" />
-      </>
+      <link rel="preload" as="image" href={preloadImage} fetchpriority="high" />
     )}
     {jsonLd.map((block) => <script type="application/ld+json" set:html={JSON.stringify(block)} />)}
 
@@ -138,9 +132,12 @@ gtag('config', '${GA4_ID}', { anonymize_ip: true });`}></script>
           <span class="nav-toggle-bar"></span>
         </button>
 
-        <button class="icon-btn nav-lang-btn" id="lang-toggle" type="button" aria-expanded="false" aria-controls="lang-panel" aria-label="Choisir la langue">
-          <span class="lang-current-flag" id="lang-current-flag" aria-hidden="true">🌐</span>
-        </button>
+        <div class="nav-right">
+          <a class="btn-publier nav-publier" href="/publier-un-article/">Être publié →</a>
+          <button class="icon-btn nav-lang-btn" id="lang-toggle" type="button" aria-expanded="false" aria-controls="lang-panel" aria-label="Choisir la langue">
+            <span class="lang-current-flag" id="lang-current-flag" aria-hidden="true">🌐</span>
+          </button>
+        </div>
       </div>
 
       <!-- Panneau recherche -->
