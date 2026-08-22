@@ -83,9 +83,17 @@ function imageMetaOf(post, size) {
   const media = post._embedded?.['wp:featuredmedia']?.[0];
   const sizes = media?.media_details?.sizes ?? {};
   const pick = sizes[size] ?? sizes.large ?? sizes.full ?? {};
+  // srcset responsive (utilisé pour le hero) : variante 480w sur mobile, 1200w sinon
+  const srcsetOf = (src) => {
+    if (size !== 'large' || !src) return undefined;
+    const ml = variantOf(media, 'medium_large');
+    if (ml && ml.src && ml.src !== src) return `${ml.src} 480w, ${src} 1200w`;
+    return undefined;
+  };
   if (pick.source_url) {
     return {
       src: pick.source_url,
+      srcset: srcsetOf(pick.source_url),
       width: pick.width ?? sizes.full?.width ?? null,
       height: pick.height ?? sizes.full?.height ?? null,
       alt: media?.alt_text ?? '',
@@ -94,7 +102,7 @@ function imageMetaOf(post, size) {
   }
   const variant = variantOf(media, size);
   if (variant) {
-    return { ...variant, alt: media?.alt_text ?? '', caption: media?.caption?.rendered ?? '' };
+    return { ...variant, srcset: srcsetOf(variant.src), alt: media?.alt_text ?? '', caption: media?.caption?.rendered ?? '' };
   }
   return {
     src: media?.source_url ?? '',

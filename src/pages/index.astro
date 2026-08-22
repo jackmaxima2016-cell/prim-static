@@ -78,6 +78,8 @@ const jsonLd = [
             <img
               class="hero-img"
               src={heroImg.src}
+              srcset={heroImg.srcset || undefined}
+              sizes={heroImg.srcset ? '(max-width: 767px) 100vw, 640px' : undefined}
               alt={heroImg.alt || decodeEntities(hero.title?.rendered ?? '')}
               width={heroImg.width ?? undefined}
               height={heroImg.height ?? undefined}
@@ -109,7 +111,6 @@ const jsonLd = [
                   class="recent-thumb"
                   src={getImageMeta(p, 'medium_large').src}
                   alt=""
-                  loading="lazy"
                   decoding="async"
                 />
               )}

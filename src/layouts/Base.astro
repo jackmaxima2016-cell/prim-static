@@ -97,6 +97,61 @@ gtag('config', '${GA4_ID}', { anonymize_ip: true });`}></script>
         </>
       )
     }
+
+    {/* Anti-CLS : filtre de langue appliqué pendant le parsing (avant le premier paint).
+        Sans ce script, le JS de fin de page masque les articles/sections hors langue APRÈS le
+        rendu → tout le contenu remonte → CLS ≈ 0,67 sur mobile. Ici chaque [data-lang] est masqué
+        dès son insertion dans le DOM ; le script principal (fin de body) reste l'unique source des
+        changements interactifs (drapeaux, recherche) et ré-applique le même état (idempotent). */}
+    <script is:inline>
+      (function () {
+        var FLAGS = ['fr','en','es','de','it','pl','ar','nl','pt','tr','nn','ru'];
+        var key = 'prim_lang_v1';
+        var lang = 'fr';
+        try {
+          var p = new URLSearchParams(location.search);
+          var s = null;
+          try { s = localStorage.getItem(key); } catch (e) {}
+          var nav = (navigator.languages && navigator.languages.length) ? navigator.languages : (navigator.language ? [navigator.language] : []);
+          var aliases = { no: 'nn', nb: 'nn' };
+          var det = null;
+          for (var i = 0; i < nav.length; i++) {
+            var b = String(nav[i]).toLowerCase().split('-')[0];
+            var c = aliases[b] || b;
+            if (FLAGS.indexOf(c) !== -1) { det = c; break; }
+          }
+          lang = p.get('lang') || s || det || 'fr';
+        } catch (e) {}
+        var hideEl = function (el) { el.hidden = !(lang === 'all' || el.getAttribute('data-lang') === lang); };
+        var refreshSection = function (el) {
+          var sec = el;
+          while (sec && sec !== document.documentElement && !(sec.nodeType === 1 && sec.hasAttribute('data-lang-group'))) sec = sec.parentNode;
+          if (sec && sec.nodeType === 1 && sec.hasAttribute('data-lang-group')) {
+            sec.hidden = !sec.querySelector('[data-lang]:not([hidden])');
+          }
+        };
+        var onAdded = function (n) {
+          if (!n || n.nodeType !== 1) return;
+          if (n.hasAttribute('data-lang')) hideEl(n);
+          var items = n.querySelectorAll ? n.querySelectorAll('[data-lang]') : [];
+          for (var j = 0; j < items.length; j++) hideEl(items[j]);
+          refreshSection(n);
+        };
+        if (document.readyState === 'loading') {
+          new MutationObserver(function (muts) {
+            for (var i = 0; i < muts.length; i++) {
+              var nodes = muts[i].addedNodes;
+              for (var j = 0; j < nodes.length; j++) onAdded(nodes[j]);
+            }
+          }).observe(document.documentElement, { childList: true, subtree: true });
+        } else {
+          var all = document.querySelectorAll('[data-lang]');
+          for (var k = 0; k < all.length; k++) hideEl(all[k]);
+          var grp = document.querySelectorAll('[data-lang-group]');
+          for (var g = 0; g < grp.length; g++) refreshSection(grp[g]);
+        }
+      })();
+    </script>
   </head>
   <body>
     <!-- Bandeau supérieur : date + tagline -->
