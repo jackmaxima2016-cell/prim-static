@@ -10,11 +10,14 @@ export default {
     if (REDIRECTS[url.pathname]) {
       return Response.redirect(new URL(REDIRECTS[url.pathname], url.origin), 301);
     }
-    // Redirection 301 : anciennes URLs multilingues /en/<slug>/ (WP Polylang) → /<slug>/
+    // Redirection 301 : anciennes URLs multilingues /<lang>/<slug>/ (WP Polylang) → /<slug>/
     // (le site actuel sert tous les slugs nus ; la langue est filtrée côté client).
-    // Sûr : aucun path généré ne commence par /en/ (les slugs "en-..." donnent /en-.../).
-    if (url.pathname.startsWith('/en/')) {
-      return Response.redirect(new URL(url.pathname.slice(3) + url.search, url.origin), 301);
+    // Sûr : aucun path généré ne commence par <lang>/ (slugs "en-..." → /en-.../, pas /en/...)
+    // et aucun slug exact ne correspond à un code langue (vérifié au build).
+    const LANG_PREFIXES = ['en', 'es', 'de', 'it', 'nl', 'ar', 'tr', 'ru', 'pt', 'pl', 'nn'];
+    const firstSeg = url.pathname.split('/')[1];
+    if (LANG_PREFIXES.includes(firstSeg)) {
+      return Response.redirect(new URL(url.pathname.slice(firstSeg.length + 1) + url.search, url.origin), 301);
     }
     if (url.pathname.startsWith('/wp-content/')) {
       // Décoder l'URL : les noms de fichiers accentués arrivent encodés (%C3%A0),
