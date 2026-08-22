@@ -9,16 +9,16 @@ const FORM_MAILTO = 'contact@prim.net';
 const SITE = 'https://prim.net';
 
 // Source de vérité des prix (doit correspondre au formulaire)
-// Prix promotionnels (−46 % ; le prix d'origine barré est affiché côté formulaire)
-const PACKS = { Essentiel: 91, Standard: 215, Premium: 431, Impact: 809 };
-const DUREES = { '1 an': 0, '5 ans': 20, '10 ans': 50, 'À vie': 40 };
+// Prix promotionnels −46 % : le formulaire affiche ces prix en direct (prix d'origine barré)
+const PACKS = { Essentiel: 182, Standard: 430, Premium: 862, Impact: 1618 };
+const DUREES = { '1 an': 0, '5 ans': 40, '10 ans': 100, 'À vie': 80 };
 const OPTIONS = {
-  opt_redaction: { label: 'Rédaction par nos soins', price: 71 },
-  opt_lien: { label: 'Lien supplémentaire', price: 23 },
-  opt_express: { label: 'Publication express 24 h', price: 47 },
-  opt_reseaux: { label: 'Post LinkedIn + Facebook', price: 23 },
-  opt_newsletter: { label: 'Mise en avant newsletter', price: 38 },
-  opt_article: { label: 'Article additionnel', price: 95 },
+  opt_redaction: { label: 'Rédaction par nos soins', price: 142 },
+  opt_lien: { label: 'Lien supplémentaire', price: 46 },
+  opt_express: { label: 'Publication express 24 h', price: 94 },
+  opt_reseaux: { label: 'Post LinkedIn + Facebook', price: 46 },
+  opt_newsletter: { label: 'Mise en avant newsletter', price: 76 },
+  opt_article: { label: 'Article additionnel', price: 190 },
 };
 
 function json(data, status = 200) {
