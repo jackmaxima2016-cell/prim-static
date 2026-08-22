@@ -10,6 +10,12 @@ export default {
     if (REDIRECTS[url.pathname]) {
       return Response.redirect(new URL(REDIRECTS[url.pathname], url.origin), 301);
     }
+    // Redirection 301 : anciennes URLs multilingues /en/<slug>/ (WP Polylang) → /<slug>/
+    // (le site actuel sert tous les slugs nus ; la langue est filtrée côté client).
+    // Sûr : aucun path généré ne commence par /en/ (les slugs "en-..." donnent /en-.../).
+    if (url.pathname.startsWith('/en/')) {
+      return Response.redirect(new URL(url.pathname.slice(3) + url.search, url.origin), 301);
+    }
     if (url.pathname.startsWith('/wp-content/')) {
       // Décoder l'URL : les noms de fichiers accentués arrivent encodés (%C3%A0),
       // alors que les clés R2 sont stockées décodées (caractères UTF-8 réels).
