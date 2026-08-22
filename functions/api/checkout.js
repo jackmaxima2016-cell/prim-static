@@ -87,10 +87,18 @@ export async function onRequestPost(context) {
     }
     let total = packPrice;
     const chosen = [];
+    // Options quantifiables (lien / article additionnel) : 1 à 3 unités, prix × quantité
+    const QTY_MAX = { opt_lien: 3, opt_article: 3 };
+    const qtyOf = (name) => {
+      const raw = parseInt(data[`${name}_qty`], 10);
+      if (!Number.isFinite(raw) || raw < 1) return 1;
+      return Math.min(raw, QTY_MAX[name] || 3);
+    };
     for (const [name, opt] of Object.entries(OPTIONS)) {
       if (data[name] === true || data[name] === 'true' || data[name] === 'on') {
-        total += opt.price;
-        chosen.push(opt.label);
+        const qty = QTY_MAX[name] ? qtyOf(name) : 1;
+        total += opt.price * qty;
+        chosen.push(qty > 1 ? `${opt.label} ×${qty}` : opt.label);
       }
     }
     const duree = String(data.duree || 'À vie');
@@ -105,15 +113,18 @@ export async function onRequestPost(context) {
     const sujet = String(data.sujet || '');
     const message = String(data.message || '');
     // Champs conditionnels (liés aux options choisies dans le formulaire)
-    const optLienUrl = String(data.opt_lien_url || '').trim();
+    // Les options quantifiées envoient un tableau (une entrée par unité achetée)
+    const toList = (v) => (Array.isArray(v) ? v : v !== undefined && v !== null && v !== '' ? [v] : [])
+      .map((x) => String(x).trim()).filter(Boolean);
+    const optLienUrls = toList(data.opt_lien_urls || data.opt_lien_url).join(' | ');
     const optReseauxComptes = String(data.opt_reseaux_comptes || '').trim();
-    const optArticleSujet = String(data.opt_article_sujet || '').trim();
+    const optArticleSujets = toList(data.opt_article_sujets || data.opt_article_sujet).join(' | ');
     const optRedactionAngle = String(data.opt_redaction_angle || '').trim();
 
     // ---- Pas de clé Stripe : repli email (provisoire) ----
     if (!env.STRIPE_SECRET_KEY) {
       const ok = await sendMailFallback(
-        { pack: packName, duree, total: `${total} EUR`, nom, email, entreprise, telephone, rubrique, site, sujet, message, options: chosen.join(', '), lien_supplementaire: optLienUrl, comptes_reseaux: optReseauxComptes, sujet_article_additionnel: optArticleSujet, angle_redaction: optRedactionAngle },
+        { pack: packName, duree, total: `${total} EUR`, nom, email, entreprise, telephone, rubrique, site, sujet, message, options: chosen.join(', '), lien_supplementaire: optLienUrls, comptes_reseaux: optReseauxComptes, sujet_article_additionnel: optArticleSujets, angle_redaction: optRedactionAngle },
         new FormData()
       );
       return ok
@@ -137,20 +148,22 @@ export async function onRequestPost(context) {
     params.set('metadata[rubrique]', rubrique.slice(0, 120));
     params.set('metadata[site]', site.slice(0, 200));
     params.set('metadata[sujet]', sujet.slice(0, 480));
-    params.set('metadata[lien_supplementaire]', optLienUrl.slice(0, 480));
+    params.set('metadata[lien_supplementaire]', optLienUrls.slice(0, 480));
     params.set('metadata[comptes_reseaux]', optReseauxComptes.slice(0, 480));
-    params.set('metadata[sujet_article_additionnel]', optArticleSujet.slice(0, 480));
+    params.set('metadata[sujet_article_additionnel]', optArticleSujets.slice(0, 480));
     params.set('metadata[angle_redaction]', optRedactionAngle.slice(0, 480));
     params.set('metadata[options]', chosen.join(', ').slice(0, 480));
     params.set('metadata[total]', `${total} EUR`);
 
     const items = [
-      { name: `Pack ${packName} — prim.net`, price: packPrice },
-      ...(dureePrice > 0 ? [{ name: `Durée de publication : ${duree} — prim.net`, price: dureePrice }] : []),
-      ...chosen.map((label, i) => ({ name: `Option : ${label}`, price: OPTIONS[Object.keys(OPTIONS).filter((k) => OPTIONS[k].label === label)[0]].price })),
+      { name: `Pack ${packName} — prim.net`, price: packPrice, qty: 1 },
+      ...(dureePrice > 0 ? [{ name: `Durée de publication : ${duree} — prim.net`, price: dureePrice, qty: 1 }] : []),
+      ...Object.entries(OPTIONS)
+        .filter(([name]) => data[name] === true || data[name] === 'true' || data[name] === 'on')
+        .map(([name, opt]) => ({ name: `Option : ${opt.label}`, price: opt.price, qty: QTY_MAX[name] ? qtyOf(name) : 1 })),
     ];
     items.forEach((it, i) => {
-      params.set(`line_items[${i}][quantity]`, '1');
+      params.set(`line_items[${i}][quantity]`, String(it.qty));
       params.set(`line_items[${i}][price_data][currency]`, 'eur');
       params.set(`line_items[${i}][price_data][unit_amount]`, String(it.price * 100));
       params.set(`line_items[${i}][price_data][product_data][name]`, it.name);

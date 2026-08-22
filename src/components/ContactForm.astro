@@ -41,11 +41,11 @@ const durees = [
 
 const options = [
   { id: 'opt-redaction', name: 'opt_redaction', label: 'Rédaction par nos soins', note: 'vous fournissez le sujet, nous écrivons', price: 142, old: 298 },
-  { id: 'opt-lien', name: 'opt_lien', label: 'Lien supplémentaire', note: 'un backlink de plus vers votre site', price: 46, old: 98 },
+  { id: 'opt-lien', name: 'opt_lien', label: 'Lien supplémentaire', note: 'un backlink de plus vers votre site', price: 46, old: 98, qty: true, qtyName: 'opt_lien_qty', qtyMax: 3 },
   { id: 'opt-express', name: 'opt_express', label: 'Publication express 24 h', note: 'priorité absolue au planning', price: 94, old: 198 },
   { id: 'opt-reseaux', name: 'opt_reseaux', label: 'Post LinkedIn + Facebook', note: 'annonce de votre article', price: 46, old: 98 },
   { id: 'opt-newsletter', name: 'opt_newsletter', label: 'Mise en avant newsletter', note: 'à nos abonnés', price: 76, old: 158 },
-  { id: 'opt-article', name: 'opt_article', label: 'Article additionnel', note: 'un article de plus dans le même pack', price: 190, old: 398 },
+  { id: 'opt-article', name: 'opt_article', label: 'Article additionnel', note: 'un article de plus dans le même pack', price: 190, old: 398, qty: true, qtyName: 'opt_article_qty', qtyMax: 3 },
 ];
 
 const stepTitles = ['Choisissez votre pack', 'Durée & options', 'Vos informations', 'Votre projet'];
@@ -125,14 +125,25 @@ const stepTitles = ['Choisissez votre pack', 'Durée & options', 'Vos informatio
           {options.map((o) => (
             <label class="opt-item" for={o.id}>
               <span class="opt-main">
-                <input type="checkbox" id={o.id} name={o.name} data-price={o.price} data-old={o.old} />
+                <input type="checkbox" id={o.id} name={o.name} data-price={o.price} data-old={o.old} data-qty-max={o.qtyMax || 0} />
                 <span class="opt-check" aria-hidden="true"></span>
                 <span>
                   <span class="opt-label">{o.label}</span>
                   <span class="opt-note">{o.note}</span>
                 </span>
+                {o.qty && (
+                  <span class="opt-qty" data-qty-wrap={o.id} hidden>
+                    <button type="button" class="qty-btn" data-qty-minus={o.id} aria-label={`Réduire la quantité de ${o.label}`}>−</button>
+                    <span class="qty-val" data-qty-val={o.id}>1</span>
+                    <button type="button" class="qty-btn" data-qty-plus={o.id} aria-label={`Augmenter la quantité de ${o.label}`}>+</button>
+                  </span>
+                )}
               </span>
-              <span class="opt-price"><s class="opt-old">{o.old} €</s> +{o.price} €</span>
+              <span class="opt-price">
+                <s class="opt-old">{o.old} €</s>
+                {o.qty ? <span data-opt-price={o.id}>+{o.price} € / unité</span> : <span>+{o.price} €</span>}
+              </span>
+              {o.qty && <input type="hidden" name={o.qtyName} data-qty-input={o.id} value="1" />}
             </label>
           ))}
         </div>
@@ -187,17 +198,17 @@ const stepTitles = ['Choisissez votre pack', 'Durée & options', 'Vos informatio
             <label for="f-opt-redaction">Mots-clés / angle pour la rédaction</label>
             <input type="text" id="f-opt-redaction" name="opt_redaction_angle" placeholder="Ex. : cybersécurité, PME, données…" />
           </div>
-          <div class="form-field cond-field" data-cond="opt-lien" data-required="true" hidden>
-            <label for="f-opt-lien">URL du lien supplémentaire *</label>
-            <input type="url" id="f-opt-lien" name="opt_lien_url" placeholder="https://votre-site.ch/page-a-lier" />
+          <div class="form-field cond-field" data-cond="opt-lien" data-required="true" data-dynamic="opt-lien" hidden>
+            <label>Lien(s) supplémentaire(s) — une URL par lien</label>
+            <div class="cond-inputs" data-cond-inputs="opt-lien"></div>
           </div>
           <div class="form-field cond-field" data-cond="opt-reseaux" data-required="false" hidden>
             <label for="f-opt-reseaux">Comptes à mentionner (LinkedIn / Facebook)</label>
             <input type="text" id="f-opt-reseaux" name="opt_reseaux_comptes" placeholder="Ex. : @votre-entreprise, page Facebook…" />
           </div>
-          <div class="form-field cond-field" data-cond="opt-article" data-required="true" hidden>
-            <label for="f-opt-article">Sujet de l'article additionnel *</label>
-            <input type="text" id="f-opt-article" name="opt_article_sujet" placeholder="Le thème du 2e article" />
+          <div class="form-field cond-field" data-cond="opt-article" data-required="true" data-dynamic="opt-article" hidden>
+            <label>Article(s) additionnel(s) — un sujet par article</label>
+            <div class="cond-inputs" data-cond-inputs="opt-article"></div>
           </div>
         </div>
         <div class="form-field">
@@ -379,6 +390,22 @@ const stepTitles = ['Choisissez votre pack', 'Durée & options', 'Vos informatio
   .opt-note { display: block; font-size: 12px; color: #5c5c5c; }
   .opt-price { font-size: 14px; font-weight: 800; color: var(--accent); white-space: nowrap; }
 
+  /* Stepper de quantité (options quantifiables) */
+  .opt-qty { display: inline-flex; align-items: center; gap: 4px; flex: 0 0 auto; margin-left: 8px; }
+  .opt-qty[hidden] { display: none; }
+  .qty-btn {
+    width: 26px; height: 26px; display: inline-flex; align-items: center; justify-content: center;
+    border: 1.5px solid #5c5c5c; background: #fff; border-radius: 4px;
+    font-size: 16px; font-weight: 700; line-height: 1; color: #111; cursor: pointer;
+    transition: background 0.15s, border-color 0.15s;
+  }
+  .qty-btn:hover { background: #eee; border-color: #111; }
+  .qty-btn:focus-visible { outline: 3px solid #0a5fd0; outline-offset: 2px; }
+  .qty-val { min-width: 22px; text-align: center; font-size: 14px; font-weight: 800; color: #111; font-variant-numeric: tabular-nums; }
+  .cond-sub { margin-top: 10px; }
+  .cond-sub + .cond-sub { margin-top: 14px; }
+  .cond-inputs { margin-top: 2px; }
+
   /* Champs */
   .form-row { display: grid; grid-template-columns: 1fr; gap: 0; }
   @media (min-width: 640px) { .form-row { grid-template-columns: 1fr 1fr; gap: 16px; } }
@@ -502,12 +529,18 @@ const stepTitles = ['Choisissez votre pack', 'Durée & options', 'Vos informatio
       total += p;
       if (p > 0) chosen.push({ label: `Durée ${dureeEl.value}`, price: p, old: 0 });
     }
-    // Options (cases à cocher multiples)
+    // Options (cases à cocher multiples — certaines quantifiables)
     form.querySelectorAll('input[type="checkbox"][data-price]').forEach((el) => {
       if (el.checked) {
-        total += Number(el.dataset.price);
-        totalOld += Number(el.dataset.old || 0);
-        chosen.push({ label: getChoiceLabel(el), price: Number(el.dataset.price), old: Number(el.dataset.old || 0) });
+        const qty = getQty(el);
+        const label = getChoiceLabel(el);
+        total += Number(el.dataset.price) * qty;
+        totalOld += Number(el.dataset.old || 0) * qty;
+        chosen.push({
+          label: qty > 1 ? `${label} ×${qty}` : label,
+          price: Number(el.dataset.price) * qty,
+          old: Number(el.dataset.old || 0) * qty,
+        });
       }
     });
 
@@ -544,16 +577,103 @@ const stepTitles = ['Choisissez votre pack', 'Durée & options', 'Vos informatio
 
   /* ---------- Champs conditionnels selon les options choisies ---------- */
   const condFields = [...form.querySelectorAll('.cond-field')];
+  const QTY_OPTS = ['opt-lien', 'opt-article'];
+
+  const getQty = (el) => {
+    const inp = form.querySelector(`[data-qty-input="${el.id}"]`);
+    const q = inp ? parseInt(inp.value, 10) : 1;
+    return Number.isFinite(q) && q > 0 ? q : 1;
+  };
+
+  // Génère un champ par unité pour les options quantifiables (liens / articles additionnels)
+  const renderCondInputs = () => {
+    const SPECS = {
+      'opt-lien': { name: 'opt_lien_urls[]', placeholder: 'https://votre-site.ch/page-a-lier', label: 'URL du lien supplémentaire' },
+      'opt-article': { name: 'opt_article_sujets[]', placeholder: 'Le thème de l’article', label: 'Sujet de l’article additionnel' },
+    };
+    QTY_OPTS.forEach((optId) => {
+      const box = document.getElementById(optId);
+      const container = form.querySelector(`[data-cond-inputs="${optId}"]`);
+      if (!container) return;
+      const qty = box && box.checked ? getQty(box) : 0;
+      const spec = SPECS[optId];
+      // Conserver les valeurs déjà saisies (re-rendu après changement de quantité)
+      const prev = [...container.querySelectorAll('input')].map((i) => i.value);
+      container.innerHTML = '';
+      for (let i = 1; i <= qty; i++) {
+        const wrap = document.createElement('div');
+        wrap.className = 'form-field cond-sub';
+        const lbl = document.createElement('label');
+        lbl.textContent = `${spec.label} n°${i} *`;
+        const inp = document.createElement('input');
+        inp.type = optId === 'opt-lien' ? 'url' : 'text';
+        inp.name = spec.name;
+        inp.required = true;
+        inp.placeholder = spec.placeholder;
+        if (prev[i - 1]) inp.value = prev[i - 1];
+        wrap.appendChild(lbl);
+        wrap.appendChild(inp);
+        container.appendChild(wrap);
+      }
+      const valEl = form.querySelector(`[data-qty-val="${optId}"]`);
+      if (valEl) valEl.textContent = String(qty);
+    });
+  };
+
   const syncCondFields = () => {
     condFields.forEach((f) => {
       const opt = document.getElementById(f.dataset.cond);
       const show = !!opt && opt.checked;
       f.hidden = !show;
+      if (f.dataset.dynamic) return; // champs dynamiques : le contenu est géré par renderCondInputs
       const input = f.querySelector('input, textarea');
       if (input) input.required = show && f.dataset.required === 'true';
     });
+    QTY_OPTS.forEach((optId) => {
+      const box = document.getElementById(optId);
+      const wrap = form.querySelector(`[data-qty-wrap="${optId}"]`);
+      if (wrap) wrap.hidden = !(box && box.checked);
+    });
+    renderCondInputs();
   };
   pricers.forEach((el) => el.addEventListener('change', syncCondFields));
+
+  /* ---------- Steppers de quantité (options quantifiables) ---------- */
+  form.querySelectorAll('[data-qty-plus]').forEach((btn) => {
+    btn.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      const optId = btn.dataset.qtyPlus;
+      const box = document.getElementById(optId);
+      if (!box || !box.checked) return;
+      const inp = form.querySelector(`[data-qty-input="${optId}"]`);
+      const max = Number(box.dataset.qtyMax || 3);
+      const cur = getQty(box);
+      if (cur < max) {
+        inp.value = String(cur + 1);
+        updateTotal();
+        renderCondInputs();
+        saveState();
+      }
+    });
+  });
+  form.querySelectorAll('[data-qty-minus]').forEach((btn) => {
+    btn.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      const optId = btn.dataset.qtyMinus;
+      const box = document.getElementById(optId);
+      if (!box || !box.checked) return;
+      const inp = form.querySelector(`[data-qty-input="${optId}"]`);
+      const cur = getQty(box);
+      if (cur > 1) {
+        inp.value = String(cur - 1);
+        updateTotal();
+        renderCondInputs();
+        saveState();
+      }
+    });
+  });
 
   /* ---------- Persistance localStorage ---------- */
   const saveState = () => {
@@ -652,16 +772,22 @@ const stepTitles = ['Choisissez votre pack', 'Durée & options', 'Vos informatio
     btnNext.disabled = true;
     btnNext.textContent = 'Envoi en cours…';
     try {
-      // Données complètes du formulaire (avec les cases à cocher)
+      // Données complètes du formulaire (cases à cocher + champs dynamiques des options)
       const payload = {};
-      persistables.forEach((el) => {
+      form.querySelectorAll('input, select, textarea').forEach((el) => {
+        if (!el.name || el.name === '_honey' || el.name === 'cf-turnstile-response') return;
         const condWrap = el.closest('.cond-field');
         if (condWrap) {
           const opt = form.querySelector(`#${condWrap.dataset.cond}`);
           if (!opt || !opt.checked) return; // champ lié à une option non choisie
         }
         if (el.type === 'radio') { if (el.checked) payload[el.name] = el.value; }
-        else if (el.type === 'checkbox') payload[el.name] = el.checked;
+        else if (el.type === 'checkbox') { payload[el.name] = el.checked; }
+        else if (el.name.endsWith('[]')) {
+          const key = el.name.slice(0, -2);
+          if (!Array.isArray(payload[key])) payload[key] = [];
+          payload[key].push(el.value);
+        }
         else payload[el.name] = el.value;
       });
       payload['cf-turnstile-response'] = token.value;
