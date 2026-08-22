@@ -204,7 +204,7 @@ main { padding: 30px 0 64px; }
 
 /* ============ HERO (article principal + récents avec photo) ============ */
 
-.hero { border-bottom: 1px solid var(--border); padding-bottom: 28px; margin-bottom: 34px; margin-top: -20px; /* compense le padding main 30px → marge nette menu→photo = 10px */ }
+.hero { border-bottom: 1px solid var(--border); padding-top: 10px; padding-bottom: 28px; margin-bottom: 34px; }
 /* Marge entre le MENU et la photo = marge entre les vignettes récents (10px) */
 .hero-grid { display: grid; gap: 20px; }
 .hero-main { position: relative; }
