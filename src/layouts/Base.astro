@@ -18,6 +18,10 @@ interface Props {
   relPrev?: string;
   relNext?: string;
   preloadImage?: string;
+  /** Langue de la page (<html lang>) — défaut 'fr' */
+  lang?: string;
+  /** Force la langue du filtre client (pages d'accueil par langue, sans data-lang) */
+  fixedLang?: string;
 }
 
 const {
@@ -31,6 +35,8 @@ const {
   relPrev,
   relNext,
   preloadImage,
+  lang = 'fr',
+  fixedLang,
 } = Astro.props;
 
 // Préversion : NOINDEX=1 au build => toutes les pages en noindex
@@ -54,7 +60,7 @@ const today = new Date().toLocaleDateString('fr-FR', {
 ---
 
 <!doctype html>
-<html lang="fr">
+<html lang={lang}>
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -97,6 +103,9 @@ gtag('config', '${GA4_ID}', { anonymize_ip: true });`}></script>
         </>
       )
     }
+
+    {/* Contenu head supplémentaire (hreflang des accueils par langue) */}
+    <slot name="head" />
 
     {/* Anti-CLS : filtre de langue appliqué pendant le parsing (avant le premier paint).
         Sans ce script, le JS de fin de page masque les articles/sections hors langue APRÈS le
@@ -153,7 +162,7 @@ gtag('config', '${GA4_ID}', { anonymize_ip: true });`}></script>
       })();
     </script>
   </head>
-  <body>
+  <body data-fixed-lang={fixedLang || undefined}>
     <!-- Bandeau supérieur : date + tagline -->
     <div class="topbar">
       <div class="container topbar-inner">
@@ -450,8 +459,10 @@ gtag('config', '${GA4_ID}', { anonymize_ip: true });`}></script>
         let code = 'fr';
         try {
           const params = new URLSearchParams(window.location.search);
-          // Priorité : ?lang= explicite > préférence stockée > langue du navigateur
-          code = params.get('lang') || localStorage.getItem(LANG_KEY) || detectBrowserLang() || 'fr';
+          // Priorité : langue fixée par la page (accueils /<lang>/) > ?lang= explicite
+          // > préférence stockée > langue du navigateur
+          const fixed = document.body && document.body.getAttribute('data-fixed-lang');
+          code = fixed || params.get('lang') || localStorage.getItem(LANG_KEY) || detectBrowserLang() || 'fr';
           currentQuery = params.get('s') || '';
           const input = document.getElementById('search-input');
           if (input && currentQuery) input.value = currentQuery;

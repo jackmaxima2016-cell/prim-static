@@ -1,0 +1,141 @@
+---
+// Accueils par langue : /en/, /es/, /de/... (anciennes URLs Polylang reconstruites).
+// Page 200 statique : uniquement les articles de la langue, SANS attributs data-lang
+// (le filtre client est inactif ici ; data-fixed-lang force la langue pour les drapeaux).
+// La home / reste la page complète multi-langue (SEO du contrat inchangé).
+import Base from '../../layouts/Base.astro';
+import PostCard from '../../components/PostCard.astro';
+import { getPosts, getCategories, getImageMeta, getPostCategories, getCategoryLang, getReadingTime, getPostAuthor, decodeEntities, getPostLang } from '../../lib/wp.mjs';
+import { LANGS } from '../../lib/langs.mjs';
+
+export function getStaticPaths() {
+  return Object.keys(LANGS).map((code) => ({ params: { lang: code }, props: { code, info: LANGS[code] } }));
+}
+
+const { code, info } = Astro.props;
+const site = String(Astro.site ?? 'https://prim.net').replace(/\/$/, '');
+const pageUrl = `${site}/${code}/`;
+
+// ---- Contenu : uniquement les articles de cette langue ----
+const posts = getPosts().filter((p) => getPostLang(p) === code);
+const une = posts.slice(0, 10);
+const [hero, ...recents] = une;
+const shown = [hero, ...recents.slice(0, 6)];
+const usedSlugs = new Set(shown.map((p) => p.slug));
+
+const rubriques = getCategories()
+  .filter((c) => c.count > 0)
+  .sort((a, b) => b.count - a.count)
+  .slice(0, 20)
+  .map((c) => {
+    const list = posts
+      .filter((p) => !usedSlugs.has(p.slug) && getPostCategories(p).some((pc) => pc.id === c.id))
+      .slice(0, 10);
+    list.forEach((p) => usedSlugs.add(p.slug));
+    return {
+      slug: c.slug,
+      name: decodeEntities(c.name),
+      count: c.count,
+      lang: getCategoryLang(c),
+      posts: list,
+    };
+  })
+  .filter((r) => r.posts.length > 0);
+
+const heroImg = getImageMeta(hero, 'large');
+const heroCat = getPostCategories(hero)[0];
+const heroAuthor = getPostAuthor(hero);
+const heroExcerpt = decodeEntities((hero.excerpt?.rendered ?? '').replace(/<[^>]+>/g, ' ')).replace(/\s+/g, ' ').trim().replace(/…$/, '');
+
+const jsonLd = [
+  {
+    '@context': 'https://schema.org',
+    '@type': 'WebSite',
+    name: 'Prim.net',
+    url: pageUrl,
+    inLanguage: code,
+    potentialAction: {
+      '@type': 'SearchAction',
+      target: { '@type': 'EntryPoint', urlTemplate: site + '/?s={search_term_string}' },
+      'query-input': 'required name=search_term_string',
+    },
+  },
+];
+---
+
+<Base lang={code} fixedLang={code} title={info.title} description={info.desc} canonical={pageUrl} jsonLd={jsonLd} relNext="/page/2/" preloadImage={heroImg.src || undefined}>
+  <link slot="head" rel="alternate" hreflang="x-default" href={site + '/'} />
+  <h1 class="sr-only">Prim.net</h1>
+
+  <section class="hero" aria-label="À la une">
+    <div class="hero-grid">
+      <div class="hero-main">
+        <a href={`/${hero.slug}/`} class="hero-img-wrap">
+          {heroImg.src && (
+            <img
+              class="hero-img"
+              src={heroImg.src}
+              srcset={heroImg.srcset || undefined}
+              sizes={heroImg.srcset ? '(max-width: 767px) 100vw, 640px' : undefined}
+              alt={heroImg.alt || decodeEntities(hero.title?.rendered ?? '')}
+              width={heroImg.width ?? undefined}
+              height={heroImg.height ?? undefined}
+              fetchpriority="high"
+            />
+          )}
+        </a>
+        <div class="hero-body">
+          <p class="hero-label">À la une</p>
+          {heroCat && <span class="badge">{heroCat.name}</span>}
+          <h2 class="hero-title"><a href={`/${hero.slug}/`}>{decodeEntities(hero.title?.rendered ?? '')}</a></h2>
+          {heroExcerpt && <p class="hero-excerpt">{heroExcerpt}</p>}
+          <div class="meta">
+            <time datetime={hero.date}>{new Date(hero.date).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}</time>
+            <span class="sep">·</span>
+            <span>par {heroAuthor}</span>
+            <span class="sep">·</span>
+            <span>{getReadingTime(hero)} min de lecture</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="hero-recents">
+        {recents.slice(0, 6).map((p) => (
+          <article class="recent-item">
+            <a href={`/${p.slug}/`} tabindex="-1" aria-hidden="true">
+              {getImageMeta(p, 'medium_large').src && (
+                <img
+                  class="recent-thumb"
+                  src={getImageMeta(p, 'medium_large').src}
+                  alt=""
+                  decoding="async"
+                />
+              )}
+            </a>
+            <div>
+              <h3 class="recent-title"><a href={`/${p.slug}/`}>{decodeEntities(p.title?.rendered ?? '')}</a></h3>
+              <time class="recent-date" datetime={p.date}>{new Date(p.date).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' })}</time>
+            </div>
+          </article>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  {rubriques.map((r) => (
+    <section class="section-block" id={`rubrique-${r.slug}`} aria-label={r.name}>
+      <div class="section-head">
+        <h2 class="section-title">{r.name}</h2>
+        <span class="section-link">{r.count} articles</span>
+      </div>
+      <div class="rubric-grid">
+        {r.posts.map((post) => <PostCard post={post} />)}
+      </div>
+    </section>
+  ))}
+
+  <nav class="pagination" aria-label="Pagination">
+    <span class="page-info">Page 1 sur {Math.ceil(getPosts().length / 10)}</span>
+    <a rel="next" href="/page/2/">Plus d'actualités →</a>
+  </nav>
+</Base>

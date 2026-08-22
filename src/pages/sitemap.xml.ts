@@ -9,6 +9,8 @@ export const GET: APIRoute = ({ site }) => {
   const total = Math.ceil(posts.length / PAGE_SIZE);
 
   const urls = ['', '/contact/', '/publier-un-article/', '/plan-du-site/', '/mentions-legales/', '/confidentialite/', '/cgv/'];
+  // Accueils par langue (anciennes URLs Polylang reconstruites)
+  for (const l of ['en', 'es', 'de', 'it', 'nl', 'ar', 'tr', 'ru', 'pt', 'pl', 'nn']) urls.push(`/${l}/`);
   for (let i = 2; i <= total; i++) urls.push(`/page/${i}/`);
   for (const p of pages) urls.push(`/${p.slug}/`);
   for (const p of posts) urls.push(`/${p.slug}/`);
