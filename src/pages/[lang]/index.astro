@@ -122,14 +122,14 @@ const jsonLd = [
     </div>
   </section>
 
-  {rubriques.map((r) => (
+  {rubriques.map((r, ri) => (
     <section class="section-block" id={`rubrique-${r.slug}`} aria-label={r.name}>
       <div class="section-head">
         <h2 class="section-title">{r.name}</h2>
         <span class="section-link">{r.count} articles</span>
       </div>
       <div class="rubric-grid">
-        {r.posts.map((post) => <PostCard post={post} />)}
+        {r.posts.map((post, pi) => <PostCard post={post} eager={ri < 2 && pi < 3} />)}
       </div>
     </section>
   ))}

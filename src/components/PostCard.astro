@@ -6,8 +6,10 @@ import { decodeEntities, getImageMeta, getPostCategories, getPostLang, getReadin
 interface Props {
   post: any;
   variant?: 'grid' | 'line';
+  /** Charge l'image immédiatement (haut de page / LCP) au lieu de loading=lazy */
+  eager?: boolean;
 }
-const { post, variant = 'grid' } = Astro.props;
+const { post, variant = 'grid', eager = false } = Astro.props;
 const title = decodeEntities(post.title?.rendered ?? '');
 const img = getImageMeta(post, 'medium_large');
 const cats = getPostCategories(post);
@@ -37,7 +39,7 @@ const searchKey = title.toLowerCase();
               alt={img.alt || title}
               width={img.width ?? undefined}
               height={img.height ?? undefined}
-              loading="lazy"
+              loading={eager ? 'eager' : 'lazy'}
               decoding="async"
             />
           </a>
