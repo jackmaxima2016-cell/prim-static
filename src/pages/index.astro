@@ -13,8 +13,8 @@ const site = String(Astro.site ?? 'https://prim.net').replace(/\/$/, '');
 
 // Titre et description réels depuis l'audit (contrat SEO) — fallback propre
 const homeSeo = getSeoForUrl(site + '/');
-const TITLE = homeSeo?.title ?? "Prim.net - L'actualités au quotidien en PRIM";
-const DESC = homeSeo?.description ?? "L'actualités au quotidien en PRIM";
+const TITLE = homeSeo?.title ?? "Prim.net - L'actualité au quotidien en PRIM";
+const DESC = homeSeo?.description ?? "L'actualité au quotidien en PRIM";
 
 // ---- Composition éditoriale ----
 // Bloc « À la une » : les 10 articles les plus récents (avec photo) en haut
