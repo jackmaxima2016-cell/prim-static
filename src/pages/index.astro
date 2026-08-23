@@ -66,7 +66,7 @@ const jsonLd = [
 ];
 ---
 
-<Base title={TITLE} description={DESC} canonical={site + '/'} jsonLd={jsonLd} relNext="/page/2/" preloadImage={heroImg.src || undefined}>
+<Base title={TITLE} description={DESC} canonical={site + '/'} jsonLd={jsonLd} relNext="/page/2/" preloadImage={heroImg.src || undefined} preloadSrcset={heroImg.srcset || undefined} preloadSizes={heroImg.srcset ? '(max-width: 767px) 100vw, 640px' : undefined}>
   <h1 class="sr-only">Prim.net</h1>
 
   <!-- À LA UNE : les articles les plus récents avec photo en haut -->

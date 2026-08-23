@@ -18,6 +18,9 @@ interface Props {
   relPrev?: string;
   relNext?: string;
   preloadImage?: string;
+  /** srcset/sizes du preload image (LCP mobile : ne télécharger que la variante utile) */
+  preloadSrcset?: string;
+  preloadSizes?: string;
   /** Langue de la page (<html lang>) — défaut 'fr' */
   lang?: string;
   /** Force la langue du filtre client (pages d'accueil par langue, sans data-lang) */
@@ -35,6 +38,8 @@ const {
   relPrev,
   relNext,
   preloadImage,
+  preloadSrcset,
+  preloadSizes,
   lang = 'fr',
   fixedLang,
 } = Astro.props;
@@ -83,7 +88,14 @@ const today = new Date().toLocaleDateString('fr-FR', {
 
     <link rel="sitemap" href={site + '/sitemap-index.xml'} />
     {preloadImage && (
-      <link rel="preload" as="image" href={preloadImage} fetchpriority="high" />
+      <link
+        rel="preload"
+        as="image"
+        href={preloadImage}
+        imagesrcset={preloadSrcset || undefined}
+        imagesizes={preloadSizes || undefined}
+        fetchpriority="high"
+      />
     )}
     {jsonLd.map((block) => <script type="application/ld+json" set:html={JSON.stringify(block)} />)}
 

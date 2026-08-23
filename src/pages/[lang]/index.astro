@@ -63,7 +63,7 @@ const jsonLd = [
 ];
 ---
 
-<Base lang={code} fixedLang={code} title={info.title} description={info.desc} canonical={pageUrl} jsonLd={jsonLd} relNext="/page/2/" preloadImage={heroImg.src || undefined}>
+<Base lang={code} fixedLang={code} title={info.title} description={info.desc} canonical={pageUrl} jsonLd={jsonLd} relNext="/page/2/" preloadImage={heroImg.src || undefined} preloadSrcset={heroImg.srcset || undefined} preloadSizes={heroImg.srcset ? '(max-width: 767px) 100vw, 640px' : undefined}>
   <link slot="head" rel="alternate" hreflang="x-default" href={site + '/'} />
   <h1 class="sr-only">Prim.net</h1>
 
