@@ -2,6 +2,18 @@
 // Importé par src/pages/[lang]/index.astro (getStaticPaths doit n'utiliser que des imports).
 export const LANG_CODES = ['en', 'es', 'de', 'it', 'nl', 'ar', 'tr', 'ru', 'pt', 'pl', 'nn'];
 
+// Codes du cluster hreflang des accueils : 'fr' = la home /, puis une page /<lang>/ par langue.
+export const HOME_CODES = ['fr', ...LANG_CODES];
+
+// Liens hreflang du cluster (x-default + les 12 langues) — à passer à <Base alternates=...>.
+export function homeAlternates(site) {
+  const out = [{ hreflang: 'x-default', href: site + '/' }];
+  for (const code of HOME_CODES) {
+    out.push({ hreflang: code, href: code === 'fr' ? site + '/' : `${site}/${code}/` });
+  }
+  return out;
+}
+
 export const LANGS = {
   en: { title: 'Prim.net - Daily news in PRIM', desc: 'News every day in PRIM' },
   es: { title: 'Prim.net - Noticias diarias en PRIM', desc: 'Actualidad diaria en PRIM' },

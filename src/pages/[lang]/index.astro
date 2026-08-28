@@ -6,7 +6,7 @@
 import Base from '../../layouts/Base.astro';
 import PostCard from '../../components/PostCard.astro';
 import { getPosts, getCategories, getImageMeta, getPostCategories, getCategoryLang, getReadingTime, getPostAuthor, decodeEntities, getPostLang } from '../../lib/wp.mjs';
-import { LANGS } from '../../lib/langs.mjs';
+import { LANGS, homeAlternates } from '../../lib/langs.mjs';
 
 export function getStaticPaths() {
   return Object.keys(LANGS).map((code) => ({ params: { lang: code }, props: { code, info: LANGS[code] } }));
@@ -63,8 +63,7 @@ const jsonLd = [
 ];
 ---
 
-<Base lang={code} fixedLang={code} title={info.title} description={info.desc} canonical={pageUrl} jsonLd={jsonLd} relNext="/page/2/" preloadImage={heroImg.src || undefined} preloadSrcset={heroImg.srcset || undefined} preloadSizes={heroImg.srcset ? '(max-width: 767px) 100vw, 640px' : undefined}>
-  <link slot="head" rel="alternate" hreflang="x-default" href={site + '/'} />
+<Base lang={code} fixedLang={code} title={info.title} description={info.desc} canonical={pageUrl} jsonLd={jsonLd} relNext="/page/2/" alternates={homeAlternates(site)} preloadImage={heroImg.src || undefined} preloadSrcset={heroImg.srcset || undefined} preloadSizes={heroImg.srcset ? '(max-width: 767px) 100vw, 640px' : undefined}>
   <h1 class="sr-only">Prim.net</h1>
 
   <section class="hero" aria-label="À la une">

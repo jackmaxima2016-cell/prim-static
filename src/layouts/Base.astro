@@ -25,6 +25,8 @@ interface Props {
   lang?: string;
   /** Force la langue du filtre client (pages d'accueil par langue, sans data-lang) */
   fixedLang?: string;
+  /** Liens hreflang alternates (cluster des accueils multi-langues) */
+  alternates?: { hreflang: string; href: string }[];
 }
 
 const {
@@ -42,6 +44,7 @@ const {
   preloadSizes,
   lang = 'fr',
   fixedLang,
+  alternates,
 } = Astro.props;
 
 // Préversion : NOINDEX=1 au build => toutes les pages en noindex
@@ -75,6 +78,7 @@ const today = new Date().toLocaleDateString('fr-FR', {
     {noindex && <meta name="robots" content="noindex, nofollow" />}
     {noindexAll && <meta name="robots" content="noindex, nofollow" />}
     <link rel="canonical" href={pageUrl} />
+    {alternates?.map((a) => <link rel="alternate" hreflang={a.hreflang} href={a.href} />)}
     {relPrev && <link rel="prev" href={relPrev} />}
     {relNext && <link rel="next" href={relNext} />}
 

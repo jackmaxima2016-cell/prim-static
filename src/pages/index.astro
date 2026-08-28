@@ -6,6 +6,7 @@ import Base from '../layouts/Base.astro';
 import PostCard from '../components/PostCard.astro';
 import { getPosts, getPages, PAGE_SIZE, getCategories, getImageMeta, getPostCategories, getPostAuthor, getPostLang, getCategoryLang, getReadingTime, decodeEntities } from '../lib/wp.mjs';
 import { getSeoForUrl } from '../lib/seo.mjs';
+import { homeAlternates } from '../lib/langs.mjs';
 
 const posts = getPosts();
 const totalPages = Math.ceil(posts.length / PAGE_SIZE);
@@ -66,7 +67,7 @@ const jsonLd = [
 ];
 ---
 
-<Base title={TITLE} description={DESC} canonical={site + '/'} jsonLd={jsonLd} relNext="/page/2/" preloadImage={heroImg.src || undefined} preloadSrcset={heroImg.srcset || undefined} preloadSizes={heroImg.srcset ? '(max-width: 767px) 100vw, 640px' : undefined}>
+<Base title={TITLE} description={DESC} canonical={site + '/'} jsonLd={jsonLd} relNext="/page/2/" alternates={homeAlternates(site)} preloadImage={heroImg.src || undefined} preloadSrcset={heroImg.srcset || undefined} preloadSizes={heroImg.srcset ? '(max-width: 767px) 100vw, 640px' : undefined}>
   <h1 class="sr-only">Prim.net</h1>
 
   <!-- À LA UNE : les articles les plus récents avec photo en haut -->
