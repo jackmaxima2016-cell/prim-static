@@ -1,0 +1,98 @@
+---
+// Article de campagne — section /blog/ de prim.net.
+// Contenu statique (hors posts.json) : la section blog est dédiée aux articles de campagne.
+// Les fientes de pigeon attaquent les équipements de toiture : panneaux solaires,
+// gouttières, gaines techniques, étanchéité. Angle distinct des 5 articles déjà publiés.
+import Base from '../../layouts/Base.astro';
+import Sidebar from '../../components/Sidebar.astro';
+
+const site = 'https://prim.net';
+const SLUG = 'fientes-de-pigeon-degats-toiture-panneaux-solaires';
+const canonical = `${site}/blog/${SLUG}/`;
+const SEO_TITLE = 'Fientes de pigeon : dégâts sur toiture et équipements';
+const H1 = 'Fientes de pigeon : les dégâts silencieux sur les toitures et les équipements techniques';
+const DESC = 'Panneaux solaires encrassés, gouttières bouchées, étanchéité attaquée : les dégâts des fientes de pigeon sur les équipements de toiture et comment les éviter.';
+const EXCERPT = 'Panneaux solaires, gouttières, gaines de ventilation, étanchéité des toitures-terrasses : les dégâts des fientes de pigeon sur les équipements, et les protections qui fonctionnent vraiment.';
+const DATE = '2026-10-10';
+const DATE_FR = '10 octobre 2026';
+const IMG = '/wp-content/uploads/2026/10/fientes-de-pigeon-degats-toiture-panneaux-solaires.webp';
+const IMG_ALT = "Pigeon posé sur les équipements métalliques d'une toiture, à côté d'un autre pigeon en vol";
+const CAT = 'Travaux';
+
+const CONTENT = `
+<p><strong>Sur une toiture, les fientes de pigeon ne se contentent pas de salir : elles attaquent les équipements.</strong> Panneaux photovoltaïques, gouttières, gaines de ventilation, antennes, membranes d'étanchéité ou simples crochets de zinguerie subissent une agression continue, à la fois chimique et mécanique. Quelques mois de présence d'une colonie suffisent à transformer une toiture saine en source de pannes coûteuses, bien avant que quiconque ne pense à faire le compte des dégâts.</p>
+<p>Ce ne sont d'ailleurs pas les déjections fraîches qui posent le plus de problèmes, mais leur accumulation : une couche qui sèche, durcit et s'installe dans les points bas, précisément là où l'eau stagne et où personne ne regarde. Faire appel à une <a href="https://solution-pigeon.fr">entreprise nettoyage fiente de pigeon</a> ne relève donc pas du simple entretien esthétique : c'est le plus souvent la seule façon d'arrêter la dégradation des équipements en place et d'éviter une réparation lourde. Encore faut-il savoir où regarder, car les dégâts les plus coûteux sont rarement les plus visibles.</p>
+<h2>Pourquoi les toitures techniques attirent les oiseaux</h2>
+<p>Les bâtiments récents concentrent tout ce que recherche le pigeon : des points d'appui hors de portée des prédateurs, des cavités où nicher et de la chaleur. Les panneaux solaires et les gaines techniques rendent la surface plus chaude que le reste de la toiture, ce qui n'est pas anodin en hiver. Ajoutez une gouttière où stagne un peu d'eau, des mousses, parfois une mangeoire installée par un voisin, et la colonisation démarre. Elle ne s'arrête pas d'elle-même : les pigeons reviennent nicher là où ils sont nés, et la colonie se transmet le site de génération en génération — le mécanisme que décrit un <a href="https://crlbn.fr/blog/fientes-de-pigeon-prevenir-nuisances-durables/">article consacré à la prévention durable des nuisances</a>.</p>
+<h2>Panneaux solaires : encrassement, points chauds et perte de rendement</h2>
+<p>Un module photovoltaïque n'est sensible qu'à une chose : la lumière qu'il reçoit. Or un dépôt de fientes, même partiel, crée de l'ombrage. Comme les cellules d'un module sont montées en série, la zone ombragée freine l'ensemble de la chaîne électrique et se réchauffe localement. Ce « point chaud » peut, à terme, endommager définitivement le module et faire chuter la production de toute une rangée. À cela s'ajoutent la corrosion des cadres et l'encrassement des connecteurs : l'acide urique des déjections est particulièrement agressif pour les métaux et les traitements de surface. Deux réflexes : ne pas attendre que l'encrassement soit visible pour agir, et protéger les rangées par une grille ou un filet périphérique — sans jamais réduire l'aération arrière des modules, une ventilation insuffisante faisant elle aussi perdre du rendement.</p>
+<h2>Gouttières, chéneaux et descentes d'eau pluviale</h2>
+<p>C'est le point le plus fréquemment touché, et le plus coûteux à retardement. Nids, fientes et plumes forment un bouchon qui transforme une évacuation en retenue d'eau. L'eau déborde sous l'égout, ruisselle le long de la façade, s'infiltre derrière les enduits et rejoint parfois les combles. La suite est connue : traces d'humidité, moisissures, peintures qui cloquent, corrosion accélérée des crochets et de la zinguerie. Un chéneau bouché qui déborde lors d'un orage équivaut à plusieurs milliers d'euros de remise en état, alors qu'un curage préventif coûte une fraction de cette somme.</p>
+<h2>Ventilations, climatisation, cheminées et antennes</h2>
+<p>Les prises d'air et les gaines situées en toiture aspirent aussi les poussières fines issues des déjections. Filtres colmatés, débit d'air réduit, odeurs persistantes et charge microbienne accrue sont les conséquences les plus courantes. Une cheminée obstruée par un nid crée un risque immédiat : le refoulement des fumées dans le logement. Les câbles et fixations d'antenne, fragilisés par le poids des nids et l'acidité des déjections, finissent par céder. Sur ces équipements, l'inspection annuelle vaut mieux que la réparation d'urgence.</p>
+<h2>Toitures-terrasses et membranes d'étanchéité</h2>
+<p>Sur les toitures-terrasses, le problème est plus sournois. Les gravillons protecteurs se chargent, les revêtements bitumineux se ternissent puis se dégradent au contact des fientes, et les zones où l'eau stagne deviennent des réservoirs de salissures organiques où les mousses s'installent. La végétalisation spontanée qui en résulte retient l'humidité contre la membrane et finit par révéler les défauts d'étanchéité les plus fins. Là encore, la prévention coûte moins cher que l'arrachage.</p>
+<h2>Ce qui protège réellement les équipements</h2>
+<p>Trois familles de solutions fonctionnent, à condition d'être combinées. D'abord l'obstacle physique : filets tendus sous les rangées de panneaux, grilles sur les gaines et les entrées de ventilation, pics ou tiges souples sur les arêtes et les points d'appui utilisés pour se poser. Ensuite la suppression du gîte : rebouchage des cavités, calfeutrage des joints et des espaces entre éléments de couverture, réduction du nombre de perchoirs disponibles. Enfin la réduction de l'attractivité : plus de nourriture accessible, plus d'eau stagnante, plus de déchets organiques qui traînent en toiture. Les effaroucheurs sonores ou visuels utilisés seuls n'ont qu'un effet temporaire : sans obstacle ni suppression du gîte, les oiseaux s'habituent et reviennent.</p>
+<h2>Nettoyer sans se mettre en danger</h2>
+<p>Un nettoyage mal conduit est un risque sanitaire. Brosser des fientes sèches projette dans l'air des poussières potentiellement contaminées, et le travail en hauteur impose des protections collectives adaptées, un accès sécurisé aux rangées de modules et une évacuation des déchets vers une filière appropriée — et non dans le regard d'eaux pluviales du coin de la rue. Humidification préalable, protections individuelles, désinfection des surfaces : la <a href="https://es-conseil.fr/blog/nettoyer-fientes-de-pigeon-methode-protections/">méthode de nettoyage et les protections individuelles</a> sont décrites pas à pas dans un guide dédié, tandis qu'un autre article détaille les <a href="https://www.worldnet.fr/fientes-de-pigeon-nuisances-sanitaires-materielles/">nuisances sanitaires et matérielles</a> que provoquent les colonies installées. Une fréquence raisonnable : une inspection deux fois par an, en sortie d'hiver et avant l'automne, et un nettoyage dès que les dépôts deviennent visibles depuis le sol ou qu'une gouttière commence à déborder.</p>
+<h2>Quand confier le chantier à un professionnel</h2>
+<p>Une telle intervention suppose des compétences et des moyens particuliers : travail en hauteur, accès aux toitures et aux rangées photovoltaïques, aspiration plutôt que balayage, évacuation des déchets, parfois désinfection. Un devis sérieux détaille le périmètre, les protections mises en place et le devenir des déchets, et l'entreprise doit pouvoir justifier de son assurance. Le partage des <a href="https://habitat-plus.com/blog/fientes-de-pigeon-batiment-responsabilites-chiffrage">responsabilités et le chiffrage</a> d'une telle intervention méritent d'être posés par écrit, surtout en copropriété ou lorsque le bailleur est concerné. Et si le silence persiste malgré les signalements répétés, mieux vaut connaître les <a href="https://securiteconso.org/fr/blog/nuisibles/fientes-de-pigeon-droits-recours-locataire/">droits et recours d'un occupant</a> avant d'envisager une action.</p>
+<p><strong>Les dégâts causés par les fientes s'installent lentement, presque invisiblement, puis se rappellent d'un coup au premier orage ou à la première facture.</strong> Sur une toiture équipée de panneaux solaires, de gaines et de zinguerie, chaque mois de retard se paie deux fois : une fois en réparation, une fois en production perdue. Traiter en une seule intervention le nettoyage des zones touchées et la protection durable des équipements est presque toujours la solution la plus économique — et la seule qui empêche la colonie de revenir s'installer au même endroit la saison suivante.</p>
+`;
+
+const jsonLd = [
+  {
+    '@context': 'https://schema.org',
+    '@type': 'Article',
+    headline: H1,
+    description: DESC,
+    image: site + IMG,
+    datePublished: DATE,
+    dateModified: DATE,
+    author: { '@type': 'Person', name: 'Prim.net' },
+    publisher: { '@type': 'Organization', name: 'Prim.net' },
+    mainEntityOfPage: canonical,
+  },
+  {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'Accueil', item: site + '/' },
+      { '@type': 'ListItem', position: 2, name: 'Blog', item: site + '/blog/' },
+      { '@type': 'ListItem', position: 3, name: H1, item: canonical },
+    ],
+  },
+];
+---
+
+<Base title={SEO_TITLE} description={DESC} canonical={canonical} ogImage={IMG} jsonLd={jsonLd} type="article">
+  <div class="layout-ws">
+    <article class="entry">
+      <nav class="breadcrumb" aria-label="Fil d'Ariane">
+        <a href="/">Accueil</a> <span aria-hidden="true">›</span>
+        <a href="/blog/">Blog</a> <span aria-hidden="true">›</span>
+        <span class="crumb-current">{CAT}</span>
+      </nav>
+
+      <header class="entry-header">
+        <span class="badge">{CAT}</span>
+        <h1 class="entry-title">{H1}</h1>
+        <div class="entry-meta">
+          <time datetime={DATE}>{DATE_FR}</time>
+          <span class="sep">·</span>
+          <span class="byline">par Prim.net</span>
+          <span class="sep">·</span>
+          <span>6 min de lecture</span>
+        </div>
+      </header>
+
+      <img class="entry-img" src={IMG} alt={IMG_ALT} width="1600" height="900" decoding="async" />
+
+      <div class="entry-content" set:html={CONTENT} />
+
+      <p class="entry-caption">Photo d'illustration : Nayla Charo / Pexels.</p>
+    </article>
+    <Sidebar />
+  </div>
+</Base>

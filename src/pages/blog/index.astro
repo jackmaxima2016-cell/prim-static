@@ -1,0 +1,66 @@
+---
+// Section Blog de prim.net — hub des articles de campagne (hors flux d'actualité).
+// Créée le 10/10/2026 : la section /blog/ n'existait pas encore sur ce site.
+import Base from '../../layouts/Base.astro';
+import Sidebar from '../../components/Sidebar.astro';
+
+const site = 'https://prim.net';
+const canonical = `${site}/blog/`;
+const TITLE = 'Blog - Prim.net : dossiers et conseils pratiques';
+const DESC = "Le blog de Prim.net : dossiers de fond et conseils pratiques sur l'habitat, l'environnement et la vie quotidienne.";
+
+// Articles de la section blog (le plus récent en premier).
+const ARTICLES = [
+  {
+    slug: 'fientes-de-pigeon-degats-toiture-panneaux-solaires',
+    title: 'Fientes de pigeon : les dégâts silencieux sur les toitures et les équipements techniques',
+    cat: 'Travaux',
+    date: '2026-10-10',
+    dateFr: '10 octobre 2026',
+    excerpt:
+      "Panneaux solaires encrassés, gouttières bouchées, gaines de ventilation colmatées, étanchéité attaquée : ce que les fientes de pigeon abîment réellement sur une toiture, et les protections qui fonctionnent.",
+    img: '/wp-content/uploads/2026/10/fientes-de-pigeon-degats-toiture-panneaux-solaires.webp',
+    alt: "Pigeon posé sur les équipements métalliques d'une toiture",
+  },
+];
+
+const jsonLd = [
+  {
+    '@context': 'https://schema.org',
+    '@type': 'Blog',
+    name: 'Blog - Prim.net',
+    url: canonical,
+    publisher: { '@type': 'Organization', name: 'Prim.net' },
+  },
+];
+---
+
+<Base title={TITLE} description={DESC} canonical={canonical} jsonLd={jsonLd}>
+  <h1 class="page-title">Blog</h1>
+  <div class="layout-ws">
+    <div class="layout-main">
+      <p class="blog-intro">Dossiers de fond et conseils pratiques : l'habitat, l'environnement et la vie quotidienne passés au crible, avec des informations vérifiables et des chiffres utiles.</p>
+
+      <div class="post-grid">
+        {ARTICLES.map((a) => (
+          <article class="card">
+            <div class="card-media">
+              <a href={`/blog/${a.slug}/`} tabindex="-1" aria-hidden="true">
+                <img class="card-img" src={a.img} alt={a.alt} width="800" height="450" loading="eager" decoding="async" />
+              </a>
+            </div>
+            <div class="card-body">
+              <span class="badge">{a.cat}</span>
+              <h2 class="card-title"><a href={`/blog/${a.slug}/`}>{a.title}</a></h2>
+              <p class="card-excerpt">{a.excerpt}</p>
+              <div class="meta">
+                <time datetime={a.date}>{a.dateFr}</time>
+              </div>
+            </div>
+          </article>
+        ))}
+      </div>
+    </div>
+    <Sidebar />
+  </div>
+</Base>
